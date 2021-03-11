@@ -22,8 +22,10 @@ class NeuralNet:
             self.W.append(  np.random.randn(b,a)*( np.sqrt(2/(a+b)) ) )
     #### Activation Functions ######
     def relu(self, x):
+        ## works for vector
         return np.maximum(0, x, x)
     def tanh(self, x):
+        ## works for vector
         return np.tanh(x)
     def sigmoid(self, x):
         ### check if this works for a vector
@@ -47,26 +49,56 @@ class NeuralNet:
             ### Aggregation ###
             z = None
             if l == 1:
+                input_transpose = inputs.T 
+                assert(self.W[l-1].shape[1] == input_transpose.shape[0])
                 z = np.matmul(self.W[l-1],inputs.T) + self.b[l-1]
             else:
+                assert(self.W[l-1].shape[1] == a[l-2].shape[0])
                 z = np.matmul(self.W[l-1],a[l-2]) + self.b[l-1]
             
             ### Activation ###
             a.append(self.activate(self.activations[l-1]),z)
         output = a[-1]
         return output
+    def softmax_grad(x):
+        pass
     def activation_grads(self, activation, x):
-        pass
-
-    def backwardprop(self, inputs, outputs):
+        if activation == 'relu':
+            return np.greater(x,0).astype(int)
+        elif activation == 'tanh':
+            return 1 - np.square(self.tanh(x))
+        elif activation == 'sigmoid':
+            f = self.sigmoid(x)
+            return f*(1-f)
+        elif activation == 'softmax':
+            return self.softmax_grad(x)
+    def backward_prop(self, inputs, outputs):
         ## returns gradient of weights, biases
-        pass
-    def update_params(self, grads):
-        pass
+        dW = []
+        db = []
+        for i in range(self.L):
+            a = self.layer_sizes[i]
+            b = self.layer_sizes[i+1]
+            dW.append(np.zeros((b,a)))
+            db.append(np.zeros((b,1)))
+    def update_params(self, grads, eta, optimizer):
+        dW = None 
+        db = None
+        ### Assuming dW and db has the grads
+        if optimizer == 'gd':
+            self.W += np.multiply(dW,eta)
+            self.b += np.multiply(db,eta)
+        else:
+            pass
+        ### Other optimzers are to be implemented
 
-    def fit(self, train_inputs, valid_inputs, train_outputs, valid_output, batch_size):
+
+
+    def fit(self, train_inputs, valid_inputs, train_outputs, valid_outputs, batch_size):
+        ## All inputs and outputs are numpy arrays
         ### Gradient Descent ####
-        train_size = train_inputs
+        train_size = train_inputs.shape[0]
+        valid_size = valid_inputs.shape[0] 
         t = 0
         max_epochs = 100
         while(t<max_epochs):
@@ -82,9 +114,9 @@ class NeuralNet:
                 end = st+batch_size 
                 ### Network predicted outputs ###
                 y_hat = self.forward(mini_input)
-
-                grads = self.backwardprop(mini_input,mini_output)
-
+                assert(y_hat.shape  == mini_output.shape[0])
+                grads = self.backward_prop(mini_input,mini_output)
+                ## grads should have dW and db
                 self.update_params(grads)
 
                 ##update loss ##
