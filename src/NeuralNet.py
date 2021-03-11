@@ -1,5 +1,7 @@
 import numpy as np
 import dataset
+from sklearn.metrics import mean_squared_error
+from sklearn.metrics import log_loss
 class NeuralNet:
     def __init__(self, num_hidden_layers, layer_sizes ,activations ):
         ### first element in layer_sizes is input dimension and last element is output dimension##
@@ -105,16 +107,26 @@ class NeuralNet:
         ### Assuming dW and db has the grads
         if optimizer == 'gd':
             for i in range(self.L):
-                self.W[i] += np.multiply(eta,dW[i])
-                self.b[i] += np.multiply(eta,db[i])
+                self.W[i] -= np.multiply(eta,dW[i])
+                self.b[i] -= np.multiply(eta,db[i])
 
         else:
             pass
         ### Other optimzers are to be implemented
 
 
+    def accuracy(self, predicted, actual):
+        class_predicted = np.argmax(predicted,axis= 1)
+        class_actual = np.argmax(actual,axis=1)
+        accurate = 0.0
+        size = predicted.shape[0]
+        for i in range(size):
+            if class_actual[i]== class_predicted[i]:
+                accurate += 1.0
+        return (accurate/size)*100
 
-    def fit(self, train_inputs, valid_inputs, train_outputs, valid_outputs, batch_size, eta, optimizer):
+
+    def fit(self, train_inputs, valid_inputs, train_outputs, valid_outputs, batch_size, loss_fn, eta, optimizer):
         ## All inputs and outputs are numpy arrays
         ### Gradient Descent ####
         train_size = train_inputs.shape[0]
@@ -143,9 +155,25 @@ class NeuralNet:
                 
 
                 ##update loss ##
-            ## Print Loss and change in accuracy for each epoch for Training####
+                if loss_fn == 'cross_entropy':
+                    loss += log_loss(mini_output,y_hat)
+                elif loss_fn == 'square_error':
+                    loss += mean_squared_error(mini_output,y_hat)
 
-            ## Do the same with validation data ##
+            net_pred = self.forward(train_inputs)
+            ## Print Loss and change in accuracy for each epoch for Training####
+            train_accuracy = self.accuracy(net_pred, train_outputs)
+            print("Epoch :", t,"Training Loss :",loss, "Training Accuracy :", train_accuracy )
+
+            net_pred_valid = self.forward(valid_inputs)
+            valid_loss = 0
+            ## Print Loss and change in accuracy for each epoch for Validation####
+            if loss_fn == 'cross_entropy':
+                valid_loss += log_loss(valid_outputs,net_pred_valid)
+            elif loss_fn == 'square_error':
+                valid_loss += mean_squared_error(valid_outputs,net_pred_valid)
+            valid_accuracy = self.accuracy(net_pred_valid, valid_outputs)
+            print("Epoch :", t,"Validation Loss :",valid_loss, "Validation Accuracy :",valid_accuracy )
 
         ### log training ............... ###
 def flat(X):
@@ -161,7 +189,7 @@ Y_val = np.eye(10)[data['y_val']]
 input_dim = X_train.shape[1]
 output_dim = Y_train.shape[1]
 nn = NeuralNet(3,[input_dim,4,4,4,output_dim],['relu','relu','relu','soft_max'])
-nn.fit(X_train, X_val, Y_train, Y_val, 1000, 0.001, 'gd')
+nn.fit(X_train, X_val, Y_train, Y_val, 1000,'cross_entropy', 0.001, 'gd')
 
 
 
