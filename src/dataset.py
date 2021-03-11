@@ -1,8 +1,9 @@
 import os
 import wandb
+import numpy as np
 from keras.datasets import fashion_mnist 
 from keras.utils import np_utils
-labels = ["Tshirt","Trouser","Pullover","Dress","Coat","Sandal","SHirt","Sneaker","Bag","Boot"]
+labels = ["Tshirt","Trouser","Pullover","Dress","Coat","Sandal","Shirt","Sneaker","Bag","Boot"]
 def load():
   (x_train,y_train),(x_test,y_test) = fashion_mnist.load_data()
   x_train, x_val = x_train[:50000], x_train[50000:]
@@ -28,6 +29,18 @@ def log_images():
       set_images.append(train_images[i])
       set_labels.append(labels[train_labels[i]])
   wandb.log({"Examples" : [wandb.Image(img,caption = caption) for img,caption in zip(set_images, set_labels)]})
+def flat(X):
+  a = []
+  for x in X:
+    a.append((np.asarray(x)).flatten())
+  return np.asarray(a)
 ############################# Checking ############################
-wandb.init(project = 'dummy_DL')
-log_images()
+#wandb.init(project = 'dummy_DL')
+#log_images()
+data = load()
+X_train = flat(data['x_train'])
+X_val = flat(data['x_val'])
+Y_train = np.eye(10)[data['y_train']]
+Y_val = np.eye(10)[data['y_val']]
+print(X_train.shape)
+print(Y_train)

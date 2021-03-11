@@ -1,4 +1,5 @@
 import numpy as np
+import dataset
 class NeuralNet:
     def __init__(self, num_hidden_layers, layer_sizes ,activations ):
         ### first element in layer_sizes is input dimension and last element is output dimension##
@@ -32,32 +33,48 @@ class NeuralNet:
         return 1/(1 + np.exp(-x))
     ### Output Activations ###
     def softmax(self, a):
-        pass 
+        ### checking ##
+        assert(a.shape[1]==10)
+        e = np.exp(a)
+        return e / np.sum(e, axis=1, keepdims=True)
+
     def activate(self, activation, x):
         if activation == 'relu':
+            # print(x)
+            # print(self.relu(x))
             return self.relu(x)
         elif activation == 'tanh':
             return self.tanh(x)
         elif activation == 'sigmoid':
             return self.sigmoid(x)
-        elif activation == 'softmax':
+        elif activation == 'soft_max':
+            # print(x)
+            # print(self.softmax(x))
             return self.softmax(x)
     def forward(self, inputs):
         a = []
+        # print("inputs",inputs.shape)
         for l in range(1,self.L+1):
             ### Layer l ###
             ### Aggregation ###
             z = None
             if l == 1:
                 input_transpose = inputs.T 
+                # print(self.W[l-1].shape,input_transpose.shape)
                 assert(self.W[l-1].shape[1] == input_transpose.shape[0])
-                z = np.matmul(self.W[l-1],inputs.T) + self.b[l-1]
+                z = np.matmul(self.W[l-1],input_transpose) + self.b[l-1]
             else:
-                assert(self.W[l-1].shape[1] == a[l-2].shape[0])
-                z = np.matmul(self.W[l-1],a[l-2]) + self.b[l-1]
+                a_transpose = a[l-2].T
+                # print(self.W[l-1].shape,a_transpose.shape)
+                assert(self.W[l-1].shape[1] == a_transpose.shape[0])
+                z = np.matmul(self.W[l-1],a_transpose) + self.b[l-1]
             
             ### Activation ###
-            a.append(self.activate(self.activations[l-1]),z)
+            z = z.T
+            # print(z.shape == (inputs.shape, ))
+            # print(self.activations[l-1])
+            a.append( self.activate( self.activations[l-1],z))
+            # print("A",a[-1].shape)
         output = a[-1]
         return output
     def softmax_grad(x):
@@ -81,26 +98,29 @@ class NeuralNet:
             b = self.layer_sizes[i+1]
             dW.append(np.zeros((b,a)))
             db.append(np.zeros((b,1)))
+        return dW,db
     def update_params(self, grads, eta, optimizer):
-        dW = None 
-        db = None
+        dW = grads[0]
+        db = grads[1]
         ### Assuming dW and db has the grads
         if optimizer == 'gd':
-            self.W += np.multiply(dW,eta)
-            self.b += np.multiply(db,eta)
+            for i in range(self.L):
+                self.W[i] += np.multiply(eta,dW[i])
+                self.b[i] += np.multiply(eta,db[i])
+
         else:
             pass
         ### Other optimzers are to be implemented
 
 
 
-    def fit(self, train_inputs, valid_inputs, train_outputs, valid_outputs, batch_size):
+    def fit(self, train_inputs, valid_inputs, train_outputs, valid_outputs, batch_size, eta, optimizer):
         ## All inputs and outputs are numpy arrays
         ### Gradient Descent ####
         train_size = train_inputs.shape[0]
         valid_size = valid_inputs.shape[0] 
         t = 0
-        max_epochs = 100
+        max_epochs = 1
         while(t<max_epochs):
             t+=1
             loss = 0
@@ -108,25 +128,40 @@ class NeuralNet:
             st = 0
             end = batch_size
             while(end <= train_size):
+            
                 mini_input = train_inputs[st:end]
                 mini_output = train_outputs[st:end]
                 st = end 
                 end = st+batch_size 
+                print("batch",end/batch_size)
                 ### Network predicted outputs ###
                 y_hat = self.forward(mini_input)
-                assert(y_hat.shape  == mini_output.shape[0])
+                assert(y_hat.shape  == mini_output.shape)
                 grads = self.backward_prop(mini_input,mini_output)
                 ## grads should have dW and db
-                self.update_params(grads)
+                self.update_params(grads , eta, optimizer)
+                
 
                 ##update loss ##
             ## Print Loss and change in accuracy for each epoch for Training####
 
             ## Do the same with validation data ##
 
-        ### log training ............... ##    
-
-
+        ### log training ............... ###
+def flat(X):
+  a = []
+  for x in X:
+    a.append((np.asarray(x)).flatten())
+  return np.asarray(a)
+data = dataset.load()
+X_train = flat(data['x_train'])
+X_val = flat(data['x_val'])
+Y_train = np.eye(10)[data['y_train']]
+Y_val = np.eye(10)[data['y_val']]
+input_dim = X_train.shape[1]
+output_dim = Y_train.shape[1]
+nn = NeuralNet(3,[input_dim,4,4,4,output_dim],['relu','relu','relu','soft_max'])
+nn.fit(X_train, X_val, Y_train, Y_val, 1000, 0.001, 'gd')
 
 
 
