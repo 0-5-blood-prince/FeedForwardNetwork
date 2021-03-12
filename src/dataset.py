@@ -29,18 +29,37 @@ def log_images():
       set_images.append(train_images[i])
       set_labels.append(labels[train_labels[i]])
   wandb.log({"Examples" : [wandb.Image(img,caption = caption) for img,caption in zip(set_images, set_labels)]})
-def flat(X):
-  a = []
-  for x in X:
-    a.append((np.asarray(x)).flatten())
-  return np.asarray(a)
+def dataset():
+  def flat(X):
+    a = []
+    for x in X:
+      a.append((np.asarray(x)).flatten())
+    return np.asarray(a)
+  data = load()
+  X_train = flat(data['x_train'])
+  X_val = flat(data['x_val'])
+  Y_train = np.eye(10)[data['y_train']]
+  Y_val = np.eye(10)[data['y_val']]
+  return {
+      'x_train' : X_train,
+      'y_train' : Y_train,
+      'x_val' : X_val,
+      'y_val' : Y_val,
+      'x_test' : data['x_test'],
+      'y_test' : data['y_test'],
+  }
+# def flat(X):
+#   a = []
+#   for x in X:
+#     a.append((np.asarray(x)).flatten())
+#   return np.asarray(a)
 ############################# Checking ############################
 #wandb.init(project = 'dummy_DL')
 #log_images()
-data = load()
-X_train = flat(data['x_train'])
-X_val = flat(data['x_val'])
-Y_train = np.eye(10)[data['y_train']]
-Y_val = np.eye(10)[data['y_val']]
-print(X_train.shape)
-print(Y_train)
+# data = load()
+# X_train = flat(data['x_train'])
+# X_val = flat(data['x_val'])
+# Y_train = np.eye(10)[data['y_train']]
+# Y_val = np.eye(10)[data['y_val']]
+# print(X_train.shape)
+# print(Y_train)
