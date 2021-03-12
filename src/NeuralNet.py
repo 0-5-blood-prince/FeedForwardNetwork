@@ -2,6 +2,7 @@ import numpy as np
 import dataset
 from sklearn.metrics import mean_squared_error
 from sklearn.metrics import log_loss
+import wandb
 class NeuralNet:
     def __init__(self, num_hidden_layers, layer_sizes ,activations ):
         ### first element in layer_sizes is input dimension and last element is output dimension##
@@ -100,6 +101,8 @@ class NeuralNet:
             b = self.layer_sizes[i+1]
             dW.append(np.zeros((b,a)))
             db.append(np.zeros((b,1)))
+
+            
         return dW,db
     def update_params(self, grads, eta, optimizer):
         dW = grads[0]
@@ -132,7 +135,7 @@ class NeuralNet:
         train_size = train_inputs.shape[0]
         valid_size = valid_inputs.shape[0] 
         t = 0
-        max_epochs = 1
+        max_epochs = 10
         while(t<max_epochs):
             t+=1
             loss = 0
@@ -174,18 +177,14 @@ class NeuralNet:
                 valid_loss += mean_squared_error(valid_outputs,net_pred_valid)
             valid_accuracy = self.accuracy(net_pred_valid, valid_outputs)
             print("Epoch :", t,"Validation Loss :",valid_loss, "Validation Accuracy :",valid_accuracy )
+            wandb.log({ "Epoch": t, "Train Loss": loss, "Train Acc": train_accuracy, "Valid Loss": valid_loss, "Valid Acc": valid_accuracy})
 
         ### log training ............... ###
-def flat(X):
-  a = []
-  for x in X:
-    a.append((np.asarray(x)).flatten())
-  return np.asarray(a)
-data = dataset.load()
-X_train = flat(data['x_train'])
-X_val = flat(data['x_val'])
-Y_train = np.eye(10)[data['y_train']]
-Y_val = np.eye(10)[data['y_val']]
+data = dataset.dataset()
+X_train = data['x_train']
+Y_train = data['y_train']
+X_val = data['x_val']
+Y_val = data['y_val']
 input_dim = X_train.shape[1]
 output_dim = Y_train.shape[1]
 nn = NeuralNet(3,[input_dim,4,4,4,output_dim],['relu','relu','relu','soft_max'])
