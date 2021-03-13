@@ -49,6 +49,7 @@ sweep_config = {
     }
 }
 # swwep_id = wandb.sweep(sweep_config, entity="sweep",project="testing")
-network = nn.NeuralNet(3,[input_dim,4,4,4,output_dim],['relu','relu','relu','soft_max'])
-network.fit(X_train, X_val, Y_train, Y_val, 1000,'cross_entropy', 0.001, 'gd')
+network = nn.NeuralNet(3,[input_dim,4,4,4,num_classes],['relu','relu','relu','soft_max'])
+decay = 0
+network.fit(X_train, X_val, Y_train, Y_val, 1000,'cross_entropy', 0.001, 0.9, 0, 'gd' )
 # Configure the sweep – specify the parameters to search through, the search strategy, the optimization metric et all.
