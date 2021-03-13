@@ -55,31 +55,30 @@ class NeuralNet:
             # print(self.softmax(x))
             return self.softmax(x)
     def forward(self, inputs):
-        a = []
+        h = []
         # print("inputs",inputs.shape)
         for l in range(1,self.L+1):
             ### Layer l ###
             ### Aggregation ###
-            z = None
+            a = None
             if l == 1:
                 input_transpose = inputs.T 
                 # print(self.W[l-1].shape,input_transpose.shape)
                 assert(self.W[l-1].shape[1] == input_transpose.shape[0])
-                z = np.matmul(self.W[l-1],input_transpose) + self.b[l-1]
+                a = np.matmul(self.W[l-1],input_transpose) + self.b[l-1]
             else:
-                a_transpose = a[l-2].T
-                # print(self.W[l-1].shape,a_transpose.shape)
-                # print(self.b[l-1].shape)
-                assert(self.W[l-1].shape[1] == a_transpose.shape[0])
-                z = np.matmul(self.W[l-1],a_transpose) + self.b[l-1]
+                h_transpose = h[l-2].T
+                # print(self.W[l-1].shape,h_transpose.shape)
+                assert(self.W[l-1].shape[1] == h_transpose.shape[0])
+                a = np.matmul(self.W[l-1],h_transpose) + self.b[l-1]
             
             ### Activation ###
-            z = z.T
-            # print(z.shape == (inputs.shape, ))
+            a = a.T
+            # print(a.shape == (inputs.shape, ))
             # print(self.activations[l-1])
-            a.append( self.activate( self.activations[l-1],z))
-            # print("A",a[-1].shape)
-        output = a[-1]
+            h.append( self.activate( self.activations[l-1],a))
+            # print("H",h[-1].shape)
+        output = h[-1]
         return output
     def softmax_grad(x):
         pass
@@ -117,7 +116,6 @@ class NeuralNet:
         else:
             pass
         ### Other optimzers are to be implemented
-
 
     def accuracy(self, predicted, actual):
         class_predicted = np.argmax(predicted,axis= 1)
