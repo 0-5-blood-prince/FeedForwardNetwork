@@ -128,7 +128,7 @@ class NeuralNet:
             if class_actual[i]== class_predicted[i]:
                 accurate += 1.0
         return (accurate/size)*100
-    def SGD(self, eta, decay=1e-5, gamma, optimizer,  train_inputs, train_outputs, batch_size, loss_fn):
+    def SGD(self, eta, gamma, optimizer,  train_inputs, train_outputs, batch_size, loss_fn , decay):
             st = 0
             end = batch_size
             sample_size = train_inputs.shape[0]
@@ -190,7 +190,7 @@ class NeuralNet:
             loss = 0
             #### Minibatch ####
             if optimizer == 'sgd' or optimizer == 'momentum' or optimizer == 'nesterov':
-                loss = self.SGD( eta, decay, gamma , optimizer , train_inputs , train_outputs , batch_size , loss_fn)
+                loss = self.SGD( eta,gamma , optimizer , train_inputs , train_outputs , batch_size , loss_fn,decay)
 
             net_pred = self.forward(train_inputs)
             ## Print Loss and change in accuracy for each epoch for Training####
