@@ -25,6 +25,8 @@ class NeuralNet:
             a = self.layer_sizes[i]
             b = self.layer_sizes[i+1]
             self.W.append(  np.random.randn(b,a)*( np.sqrt(2/(a+b)) ) )
+        self.aggLayer = []  # to store h's
+        self.actLayer = []  # to store a's
     #### Activation Functions ######
     def relu(self, x):
         ## works for vector
@@ -58,6 +60,9 @@ class NeuralNet:
             return self.softmax(x)
     def forward(self, inputs):
         h = []
+        self.aggLayer = []
+        self.actLayer = []
+
         # print("inputs",inputs.shape)
         for l in range(1,self.L+1):
             ### Layer l ###
@@ -74,12 +79,17 @@ class NeuralNet:
                 assert(self.W[l-1].shape[1] == h_transpose.shape[0])
                 a = np.matmul(self.W[l-1],h_transpose) + self.b[l-1]
             
+            self.aggLayer.append(a[-1])
+
             ### Activation ###
             a = a.T
             # print(a.shape == (inputs.shape, ))
             # print(self.activations[l-1])
             h.append( self.activate( self.activations[l-1],a))
             # print("H",h[-1].shape)
+
+            self.actLayer.append(h[-1])
+
         output = h[-1]
         return output
     def softmax_grad(x):
