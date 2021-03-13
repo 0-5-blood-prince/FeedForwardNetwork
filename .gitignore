@@ -1,3 +1,4 @@
 src/wandb/
+wandb/
 .vscode/
 src/__pycache__/
