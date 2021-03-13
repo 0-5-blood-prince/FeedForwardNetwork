@@ -69,6 +69,7 @@ class NeuralNet:
             else:
                 a_transpose = a[l-2].T
                 # print(self.W[l-1].shape,a_transpose.shape)
+                # print(self.b[l-1].shape)
                 assert(self.W[l-1].shape[1] == a_transpose.shape[0])
                 z = np.matmul(self.W[l-1],a_transpose) + self.b[l-1]
             
@@ -127,9 +128,57 @@ class NeuralNet:
             if class_actual[i]== class_predicted[i]:
                 accurate += 1.0
         return (accurate/size)*100
+    def SGD(self, eta, decay=1e-5, gamma, optimizer,  train_inputs, train_outputs, batch_size, loss_fn):
+            st = 0
+            end = batch_size
+            sample_size = train_inputs.shape[0]
+            loss = 0
+            while(end <= sample_size):
+            
+                mini_input = train_inputs[st:end]
+                mini_output = train_outputs[st:end]
+                st = end 
+                end = st+batch_size 
+                print("batch",end/batch_size)
+                
+                ### Network predicted outputs ###
+                y_hat = self.forward(mini_input)
 
+                assert(y_hat.shape  == mini_output.shape)
 
-    def fit(self, train_inputs, valid_inputs, train_outputs, valid_outputs, batch_size, loss_fn, eta, optimizer):
+                grads = self.backward_prop(mini_input,mini_output)
+                ## grads should have dW and db
+                dW = grads[0]
+                db = grads[1]
+                momentW = []
+                momentb = []
+                for i in range(self.L):
+                    a = self.layer_sizes[i]
+                    b = self.layer_sizes[i+1]
+                    momentW.append(np.zeros((b,a)))
+                    momentb.append(np.zeros((b,1)))
+                ### Assuming dW and db has the grads
+                if optimizer == 'sgd':
+                    for i in range(self.L):
+                        self.W[i] -= np.multiply(eta,dW[i])
+                        self.b[i] -= np.multiply(eta,db[i])
+
+                elif optimizer == 'momentum' or optimizer == 'nesterov':
+                    for i in range(self.L):
+                        momentW[i] = np.multiply(gamma,momentW[i]) + np.multiply(eta,dW[i])
+                        momentb[i] = np.multiply(gamma,momentb[i])+ np.multiply(eta,db[i])
+                        self.W[i] -= momentW[i]
+                        self.b[i] -= momentb[i]
+                
+
+                ##update loss ##
+                if loss_fn == 'cross_entropy':
+                    loss += log_loss(mini_output,y_hat)
+                elif loss_fn == 'square_error':
+                    loss += mean_squared_error(mini_output,y_hat)
+            return loss
+
+    def fit(self, train_inputs, valid_inputs, train_outputs, valid_outputs, batch_size, loss_fn, eta, gamma, decay, optimizer):
         ## All inputs and outputs are numpy arrays
         ### Gradient Descent ####
         train_size = train_inputs.shape[0]
@@ -140,28 +189,8 @@ class NeuralNet:
             t+=1
             loss = 0
             #### Minibatch ####
-            st = 0
-            end = batch_size
-            while(end <= train_size):
-            
-                mini_input = train_inputs[st:end]
-                mini_output = train_outputs[st:end]
-                st = end 
-                end = st+batch_size 
-                print("batch",end/batch_size)
-                ### Network predicted outputs ###
-                y_hat = self.forward(mini_input)
-                assert(y_hat.shape  == mini_output.shape)
-                grads = self.backward_prop(mini_input,mini_output)
-                ## grads should have dW and db
-                self.update_params(grads , eta, optimizer)
-                
-
-                ##update loss ##
-                if loss_fn == 'cross_entropy':
-                    loss += log_loss(mini_output,y_hat)
-                elif loss_fn == 'square_error':
-                    loss += mean_squared_error(mini_output,y_hat)
+            if optimizer == 'sgd' or optimizer == 'momentum' or optimizer == 'nesterov':
+                loss = self.SGD( eta, decay, gamma , optimizer , train_inputs , train_outputs , batch_size , loss_fn)
 
             net_pred = self.forward(train_inputs)
             ## Print Loss and change in accuracy for each epoch for Training####
@@ -180,15 +209,7 @@ class NeuralNet:
             wandb.log({ "Epoch": t, "Train Loss": loss, "Train Acc": train_accuracy, "Valid Loss": valid_loss, "Valid Acc": valid_accuracy})
 
         ### log training ............... ###
-data = dataset.dataset()
-X_train = data['x_train']
-Y_train = data['y_train']
-X_val = data['x_val']
-Y_val = data['y_val']
-input_dim = X_train.shape[1]
-output_dim = Y_train.shape[1]
-nn = NeuralNet(3,[input_dim,4,4,4,output_dim],['relu','relu','relu','soft_max'])
-nn.fit(X_train, X_val, Y_train, Y_val, 1000,'cross_entropy', 0.001, 'gd')
+
 
 
 
