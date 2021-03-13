@@ -2,6 +2,7 @@ import numpy as np
 import dataset
 from sklearn.metrics import mean_squared_error
 from sklearn.metrics import log_loss
+from scipy.special import expit
 import wandb
 class NeuralNet:
     def __init__(self, num_hidden_layers, layer_sizes ,activations ):
@@ -32,7 +33,8 @@ class NeuralNet:
         ## works for vector
         return np.tanh(x)
     def sigmoid(self, x):
-        ### check if this works for a vector
+        # return expit(x)
+        ## check if this works for a vector
         return 1/(1 + np.exp(-x))
     ### Output Activations ###
     def softmax(self, a):
@@ -204,7 +206,7 @@ class NeuralNet:
                 valid_loss += mean_squared_error(valid_outputs,net_pred_valid)
             valid_accuracy = self.accuracy(net_pred_valid, valid_outputs)
             print("Epoch :", t,"Validation Loss :",valid_loss, "Validation Accuracy :",valid_accuracy )
-            wandb.log({ "Epoch": t, "Train Loss": loss, "Train Acc": train_accuracy, "Valid Loss": valid_loss, "Valid Acc": valid_accuracy})
+            # wandb.log({ "Epoch": t, "Train Loss": loss, "Train Acc": train_accuracy, "Valid Loss": valid_loss, "Valid Acc": valid_accuracy})
 
         ### log training ............... ###
 
