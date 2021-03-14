@@ -193,7 +193,7 @@ class NeuralNet:
 
                 assert(y_hat.shape  == mini_output.shape)
 
-                grads = self.backward_prop(mini_input,mini_output, 'cross_entropy',self.W,self.b,'relu')
+                grads = self.backward_prop(mini_input,mini_output, 'cross_entropy',self.W,self.b,self.activations[0])
                 ## grads should have dW and db
                 
                 dW = grads[0]
