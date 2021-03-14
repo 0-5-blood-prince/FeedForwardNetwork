@@ -37,9 +37,9 @@ class NeuralNet:
         ## works for vector
         return np.tanh(x)
     def sigmoid(self, x):
-        # return expit(x)
+        return expit(x)
         ## check if this works for a vector
-        return 1/(1 + np.exp(-x))
+        # return 1/(1 + np.exp(-x))
     ### Output Activations ###
     def softmax(self, x):
         return np.exp(x - sc.logsumexp(x))
