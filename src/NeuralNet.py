@@ -174,9 +174,9 @@ class NeuralNet:
             for l in range(self.L):
                 Dw[l] = Dw[l] + dw[l]
                 Db[l] = Db[l] + db[l]
-        for l in range(self.L):
-            Dw[l] = Dw[l]/num_samples
-            Db[l] = Db[l]/num_samples
+        # for l in range(self.L):
+        #     Dw[l] = Dw[l]/num_samples
+        #     Db[l] = Db[l]/num_samples
         return Dw,Db
 
     def accuracy(self, predicted, actual):
@@ -206,7 +206,7 @@ class NeuralNet:
 
                 assert(y_hat.shape  == mini_output.shape)
 
-                grads = self.backward_prop(mini_input,mini_output, 'cross_entropy',self.W,self.b,'relu')
+                grads = self.backward_prop(mini_input,mini_output, 'cross_entropy',self.W,self.b,self.activations[0])
                 ## grads should have dW and db
                 
                 dW = grads[0]
