@@ -52,5 +52,5 @@ sweep_config = {
 # network = nn.NeuralNet(1,[input_dim,32,32,32,num_classes],['relu','relu','relu','soft_max'])
 network = nn.NeuralNet(1,[input_dim,4,num_classes],['relu','soft_max'])
 decay = 0
-network.fit(X_train, X_val, Y_train, Y_val, 32,'cross_entropy', 0.001, 0.9, 0, 'sgd' )
+network.fit(X_train, X_val, Y_train, Y_val, 32,'cross_entropy', 0.01, 0.9, 0, 'sgd' )
 # Configure the sweep – specify the parameters to search through, the search strategy, the optimization metric et all.

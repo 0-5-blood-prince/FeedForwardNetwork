@@ -122,62 +122,49 @@ class NeuralNet:
         ## returns gradient of weights, biases
         num_samples = inputs.shape[0]
         output_dim = outputs.shape[1]
-        Dw = []
-        Db = []
+        
+        x = inputs
+        y = outputs.reshape((num_samples,output_dim))
+        fx = self.actLayer[-1].reshape((num_samples,output_dim))
+        # print("ACtlayer size",len(self.actLayer))
+        dw = []
+        db = []
+        da = []
+        # dh = []
+        # dh.append(np.zeros((inputs.shape[1],num_samples)))
+        da.append(np.zeros((inputs.shape[1],num_samples)))
         for i in range(self.L):
             prev = self.layer_sizes[i]  
             curr = self.layer_sizes[i+1]
-            Dw.append(np.zeros((curr,prev)))
-            Db.append(np.zeros((curr,1)))
-            
+            dw.append(np.zeros((curr,prev)))
+            db.append(np.zeros((curr,1)))
+            # dh.append(np.zeros((curr,num_samples)))
+            da.append(np.zeros((curr,num_samples)))
 
-        for s in range(num_samples):
-            x = inputs[s]
-            y = outputs[s].reshape((output_dim,1))
-            fx = self.actLayer[-1][s].reshape((output_dim,1))
-            # print("ACtlayer size",len(self.actLayer))
-            dw = []
-            db = []
-            da = []
-            dh = []
-            dh.append(np.zeros((inputs.shape[1],1)))
-            da.append(np.zeros((inputs.shape[1],1)))
-            for i in range(self.L):
-                prev = self.layer_sizes[i]  
-                curr = self.layer_sizes[i+1]
-                dw.append(np.zeros((curr,prev)))
-                db.append(np.zeros((curr,1)))
-                dh.append(np.zeros((curr,1)))
-                da.append(np.zeros((curr,1)))
-
-            
+   
             # cross entropy
-            da[self.L] = (fx-y)
-            for l in range(self.L,0,-1):
-                # print("Layer",l)
-                # for ll in range(0, self.L+1):
-                #     print('hi a h shapes', da[ll].shape, dh[ll].shape)
-                # for ll in range(self.L):
-                #     print('hi W b',dw[ll].shape,db[ll].shape)
-                h = self.actLayer[l-1][s].reshape((self.layer_sizes[l-1],1))
-                # print(da[l].shape,h.T.shape)
-                # print(fx)
-                # print(y)
-                # print(l)
-                dw[l-1] = np.matmul(da[l],h.T)
-                db[l-1] = da[l]
-                # print(W[l-1].T.shape, da[l].shape, l)
-                dh[l-1] = np.matmul(W[l-1].T, da[l])
-                hadamardProd = self.activation_grads(activations, self.aggLayer[l-1][s])
-                da[l-1] = np.multiply(dh[l-1],hadamardProd)
+        # fx-y(outputLay) dim (numSamp, outputDim)
+        da[self.L] = (fx-y).T
+        for l in range(self.L,0,-1):
+            # print("Layer",l)
+            # for ll in range(0, self.L+1):
+            #     print('hi a h shapes', da[ll].shape, dh[ll].shape)
+            # for ll in range(self.L):
+            #     print('hi W b',dw[ll].shape,db[ll].shape)
+            h = self.actLayer[l-1].reshape((num_samples,self.layer_sizes[l-1]))
+            # print(da[l].shape,h.T.shape)
+            # print(fx)
+            # print(y)
+            # print(l)
+            dw[l-1] = (1/num_samples)*np.matmul(da[l],h)
+            db[l-1] = (1/num_samples)*np.sum(da[l], axis = 1, keepdims=True)
+            # print(W[l-1].T.shape, da[l].shape, l)
+            dh = np.matmul(W[l-1].T, da[l])
+            hadamardProd = self.activation_grads(activations, self.aggLayer[l-1].T)
+            da[l-1] = np.multiply(dh,hadamardProd)
 
-            for l in range(self.L):
-                Dw[l] = Dw[l] + dw[l]
-                Db[l] = Db[l] + db[l]
-        for l in range(self.L):
-            Dw[l] = Dw[l]/num_samples
-            Db[l] = Db[l]/num_samples
-        return Dw,Db
+        
+        return dw,db
 
     def accuracy(self, predicted, actual):
         class_predicted = np.argmax(predicted,axis= 1)
@@ -199,7 +186,7 @@ class NeuralNet:
                 mini_output = train_outputs[st:end]
                 st = end 
                 end = st+batch_size 
-                print("batch",end/batch_size)
+                # print("batch",end/batch_size)
                 
                 ### Network predicted outputs ###
                 y_hat = self.forward(mini_input)
@@ -249,7 +236,7 @@ class NeuralNet:
         train_size = train_inputs.shape[0]
         valid_size = valid_inputs.shape[0] 
         t = 0
-        max_epochs = 3
+        max_epochs = 100
         while(t<max_epochs):
             t+=1
             loss = 0
