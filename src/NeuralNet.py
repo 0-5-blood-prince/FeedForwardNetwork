@@ -199,31 +199,38 @@ class NeuralNet:
             end = batch_size
             sample_size = train_inputs.shape[0]
             loss = 0
+            momentW = self.moments[0]
+            momentb = self.moments[1]
+            
             while(end <= sample_size):
             
                 mini_input = train_inputs[st:end]
                 mini_output = train_outputs[st:end]
+                # print("batch",end/batch_size)
                 st = end 
                 end = st+batch_size 
-                print("batch",end/batch_size)
+                
                 
                 ### Network predicted outputs ###
+                if optimizer == "nesterov":
+                    tempW = self.W
+                    tempb = self.b 
+                    for i in range(self.L):
+                        self.W[i] = tempW[i] - np.multiply(gamma,momentW[i])
+                        self.b[i] = tempb[i] - np.multiply(gamma,momentb[i])
+        
                 y_hat = self.forward(mini_input)
 
                 assert(y_hat.shape  == mini_output.shape)
 
                 grads = self.backward_prop(mini_input,mini_output, 'cross_entropy',self.W,self.b,self.activations[0])
                 ## grads should have dW and db
-                
+                if optimizer == "nesterov":
+                    self.W = tempW
+                    self.b = tempb
                 dW = grads[0]
                 db = grads[1]
-                momentW = []
-                momentb = []
-                for i in range(self.L):
-                    a = self.layer_sizes[i]
-                    b = self.layer_sizes[i+1]
-                    momentW.append(np.zeros((b,a)))
-                    momentb.append(np.zeros((b,1)))
+                
                 ### Assuming dW and db has the grads
                 if optimizer == 'sgd':
                     for i in range(self.L):
@@ -247,6 +254,7 @@ class NeuralNet:
                 
             # print('W', self.W)
             # print('b', self.b)
+            self.moments = (momentW,momentb)
             return loss
     def rmsprop(self, eta,optimizer,  train_inputs, train_outputs, batch_size, loss_fn , decay):
             st = 0
@@ -255,30 +263,28 @@ class NeuralNet:
             loss = 0
             ep = 1e-8
             beta = 0.99
+            
+            v_w = self.v[0]
+            v_b = self.v[1]
+    
             while(end <= sample_size):
             
                 mini_input = train_inputs[st:end]
                 mini_output = train_outputs[st:end]
+                # print("batch",end/batch_size)
                 st = end 
                 end = st+batch_size 
-                print("batch",end/batch_size)
+                
                 
                 ### Network predicted outputs ###
                 y_hat = self.forward(mini_input)
 
                 assert(y_hat.shape  == mini_output.shape)
 
-                grads = self.backward_prop(mini_input,mini_output, 'cross_entropy',self.W,self.b,'relu')
+                grads = self.backward_prop(mini_input,mini_output, 'cross_entropy',self.W,self.b,self.activations[0])
                 ## grads should have dW and db
                 dW = grads[0]
                 db = grads[1]
-                v_w = []
-                v_b = []
-                for i in range(self.L):
-                    a = self.layer_sizes[i]
-                    b = self.layer_sizes[i+1]
-                    v_w.append(np.zeros((b,a)))
-                    v_b.append(np.zeros((b,1)))
                 for i in range(self.L):
                     v_w[i] = np.multiply(beta,v_w[i]) + np.multiply(1-beta, np.power(dW[i],2))
                     v_b[i] = np.multiply(beta,v_b[i]) + np.multiply(1-beta, np.power(db[i],2))
@@ -293,40 +299,132 @@ class NeuralNet:
                     loss += log_loss(mini_output,y_hat)
                 elif loss_fn == 'square_error':
                     loss += mean_squared_error(mini_output,y_hat)
+            self.v = (v_w,v_b)
+            return loss
+    def adam(self, eta,optimizer,  train_inputs, train_outputs, batch_size, loss_fn , decay):
+            st = 0
+            end = batch_size
+            sample_size = train_inputs.shape[0]
+            loss = 0
+            ep = 1e-8
+            beta1 = 0.9
+            beta2 = 0.99
+            
+            v_w = self.v[0]
+            v_b = self.v[1]
+            momentW = self.moments[0]
+            momentb = self.moments[1]
+            v_wh = []
+            v_bh = []
+            for i in range(self.L):
+                a = self.layer_sizes[i]
+                b = self.layer_sizes[i+1]
+                v_wh.append(np.zeros((b,a)))
+                v_bh.append(np.zeros((b,1)))
+            momentWh = []
+            momentbh = []
+            for i in range(self.L):
+                a = self.layer_sizes[i]
+                b = self.layer_sizes[i+1]
+                momentWh.append(np.zeros((b,a)))
+                momentbh.append(np.zeros((b,1)))
+            while(end <= sample_size):
+            
+                mini_input = train_inputs[st:end]
+                mini_output = train_outputs[st:end]
+                # print("batch",end/batch_size)
+                st = end 
+                end = st+batch_size 
+                
+                
+                ### Network predicted outputs ###
+                y_hat = self.forward(mini_input)
+
+                assert(y_hat.shape  == mini_output.shape)
+
+                grads = self.backward_prop(mini_input,mini_output, 'cross_entropy',self.W,self.b,self.activations[0])
+                ## grads should have dW and db
+                dW = grads[0]
+                db = grads[1]
+                for i in range(self.L):
+                    momentW[i] = np.multiply(beta1,momentW[i]) + np.multiply(1 - beta1,dW[i])
+                    momentb[i] = np.multiply(beta1,momentb[i])+ np.multiply(1-beta1,db[i])
+                for i in range(self.L):
+                    v_w[i] = np.multiply(beta2,v_w[i]) + np.multiply(1-beta2, np.power(dW[i],2))
+                    v_b[i] = np.multiply(beta2,v_b[i]) + np.multiply(1-beta2, np.power(db[i],2))
+                for i in range(self.L):
+                    momentWh[i] = momentW[i] / (1 - np.power(beta1,self.t))
+                    momentbh[i] = momentb[i] / (1 - np.power(beta1,self.t))
+                    v_wh[i] = v_w[i] / (1-np.power(beta2,self.t))
+                    v_bh[i] = v_b[i] / (1-np.power(beta2,self.t))
+                for i in range(self.L):
+                    self.W[i] -= eta * np.multiply(1 / (np.power(v_wh[i]+ ep ,1/2)) , momentWh[i])
+                    self.b[i] -= eta * np.multiply(1 / (np.power(v_bh[i]+ ep ,1/2)) , momentbh[i])
+
+
+                ##update loss ##
+                if loss_fn == 'cross_entropy':
+                    loss += log_loss(mini_output,y_hat)
+                elif loss_fn == 'square_error':
+                    loss += mean_squared_error(mini_output,y_hat)
+            self.moments = (momentW , momentb)
+            self.v = (v_w,v_b)
             return loss
     def fit(self, train_inputs, valid_inputs, train_outputs, valid_outputs, batch_size, loss_fn, eta, gamma, decay, optimizer):
         ## All inputs and outputs are numpy arrays
         ### Gradient Descent ####
         train_size = train_inputs.shape[0]
         valid_size = valid_inputs.shape[0] 
-        t = 0
+        self.t = 0
         max_epochs = 20
-        while(t<max_epochs):
-            t+=1
+        self.valid_error = []
+        v_w = []
+        v_b = []
+        for i in range(self.L):
+            a = self.layer_sizes[i]
+            b = self.layer_sizes[i+1]
+            v_w.append(np.zeros((b,a)))
+            v_b.append(np.zeros((b,1)))
+        momentW = []
+        momentb = []
+        for i in range(self.L):
+            a = self.layer_sizes[i]
+            b = self.layer_sizes[i+1]
+            momentW.append(np.zeros((b,a)))
+            momentb.append(np.zeros((b,1)))
+        self.v = (v_w,v_b)
+        self.moments = (momentW,momentb)
+        while(self.t<max_epochs):
+            self.t+=1
             loss = 0
             #### Minibatch ####
             if optimizer == 'sgd' or optimizer == 'momentum' or optimizer == 'nesterov':
                 loss = self.SGD( eta,gamma , optimizer , train_inputs , train_outputs , batch_size , loss_fn,decay)
             elif optimizer == 'rmsprop':
-                loss = self.rmsprop(eta, optimizer , train_inputs, train_outputs , batch_size , loss_fn , decay)
+                loss = self.rmsprop( eta, optimizer , train_inputs , train_outputs , batch_size , loss_fn,decay)
             else:
-                pass
+                loss = self.adam( eta, optimizer , train_inputs , train_outputs , batch_size , loss_fn,decay)
+
             net_pred = self.forward(train_inputs)
             ## Print Loss and change in accuracy for each epoch for Training####
             train_accuracy = self.accuracy(net_pred, train_outputs)
-            print("Epoch :", t,"Training Loss :",loss, "Training Accuracy :", train_accuracy )
+            print("Epoch :", self.t,"Training Loss :",loss, "Training Accuracy :", train_accuracy )
 
             net_pred_valid = self.forward(valid_inputs)
-            for a in (net_pred_valid):
-                print(a,np.sum(a))
+            print(net_pred_valid)
             valid_loss = 0
             ## Print Loss and change in accuracy for each epoch for Validation####
             if loss_fn == 'cross_entropy':
                 valid_loss += log_loss(valid_outputs,net_pred_valid)
             elif loss_fn == 'square_error':
                 valid_loss += mean_squared_error(valid_outputs,net_pred_valid)
+            
+            ## annelation
+            if self.t>1 and self.valid_error[-1] < valid_loss:
+                eta = eta/2
+            self.valid_error.append(valid_loss)
             valid_accuracy = self.accuracy(net_pred_valid, valid_outputs)
-            print("Epoch :", t,"Validation Loss :",valid_loss, "Validation Accuracy :",valid_accuracy )
+            print("Epoch :", self.t,"Validation Loss :",valid_loss, "Validation Accuracy :",valid_accuracy )
             # wandb.log({ "Epoch": t, "Train Loss": loss, "Train Acc": train_accuracy, "Valid Loss": valid_loss, "Valid Acc": valid_accuracy})
 
         ### log training ............... ###
