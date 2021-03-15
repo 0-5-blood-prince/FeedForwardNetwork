@@ -4,6 +4,9 @@ from sklearn.metrics import mean_squared_error
 from sklearn.metrics import log_loss
 from scipy.special import expit
 from scipy.special import softmax as sm
+import pycuda.gpuarray as gpuarray
+import skcuda.linalg as linalg
+import pycuda.autoinit
 import scipy.special as sc
 import wandb
 class NeuralNet:
@@ -120,6 +123,7 @@ class NeuralNet:
 
     def backward_prop(self, inputs, outputs, lossFunction, W, b, activations):
         ## returns gradient of weights, biases
+        linalg.init()
         num_samples = inputs.shape[0]
         output_dim = outputs.shape[1]
         
