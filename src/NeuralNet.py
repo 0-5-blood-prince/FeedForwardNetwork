@@ -9,7 +9,6 @@ import wandb
 class NeuralNet:
     def __init__(self, num_hidden_layers, layer_sizes ,activations ):
         ### first element in layer_sizes is input dimension and last element is output dimension##
-
         self.L = num_hidden_layers + 1 # doesn't include input layer
         self.input_dim = layer_sizes[0]
         assert(len(layer_sizes) == self.L + 1) ### Input_size, hidden layer sizes and output layer size
@@ -29,6 +28,7 @@ class NeuralNet:
             self.W.append(  np.random.randn(b,a)*( np.sqrt(2/(a+b)) ) )
         self.aggLayer = []  # to store h's
         self.actLayer = []  # to store a's
+
     #### Activation Functions ######
     def relu(self, x):
         ## works for vector
@@ -42,43 +42,30 @@ class NeuralNet:
         # return 1/(1 + np.exp(-x))
     ### Output Activations ###
 
-    # def softmax(self, x):
-    #     return np.exp(x - sc.logsumexp(x)) 
+    
     def softmax(self, z):
+        # Ref : stack overflow softmax implementation
         assert len(z.shape) == 2
         s = np.max(z, axis=1)
-        s = s[:, np.newaxis] # necessary step to do broadcasting
+        s = s[:, np.newaxis]
         e_x = np.exp(z - s)
         div = np.sum(e_x, axis=1)
-        div = div[:, np.newaxis] # dito
+        div = div[:, np.newaxis] 
         output = e_x / div
         return output
-    # def softmax(self, a):
-        
-    #     ### checking ##
-        # return sm(a)
-    #     # assert(a.shape[1]==10)
-    #     # e = np.exp(a)
-    #     # return e / np.sum(e, axis=1, keepdims=True)
-
     def activate(self, activation, x):
         if activation == 'relu':
-            # print(x)
-            # print(self.relu(x))
             return self.relu(x)
         elif activation == 'tanh':
             return self.tanh(x)
         elif activation == 'sigmoid':
             return self.sigmoid(x)
         elif activation == 'soft_max':
-            # print(x)
-            # print(self.softmax(x))
             return self.softmax(x)
     def forward(self, inputs):
         h = []
         self.aggLayer = []
         self.actLayer = []
-
         # print("inputs",inputs.shape)
         # appending inputLayer to self.actLayer
         self.actLayer.append(inputs)
@@ -88,6 +75,7 @@ class NeuralNet:
             ### Aggregation ###
             a = None
             if l == 1:
+                ## Fisrt hidden layer Weights
                 input_transpose = inputs.T 
                 # print(self.W[l-1].shape,input_transpose.shape)
                 assert(self.W[l-1].shape[1] == input_transpose.shape[0])
@@ -106,14 +94,12 @@ class NeuralNet:
             # print(self.activations[l-1])
             h.append( self.activate( self.activations[l-1],a))
             # print("H",h[-1].shape)
-
             self.actLayer.append(h[-1])
 
         output = h[-1]
         # print('nn 94, actLayer shape:' + str(len(self.actLayer[0])))
         return output
-    def softmax_grad(x):
-        pass
+    
     def activation_grads(self, activation, x):
         if activation == 'relu':
             return np.greater(x,0).astype(int)
@@ -124,6 +110,7 @@ class NeuralNet:
             return f*(1-f)
         elif activation == 'softmax':
             return self.softmax_grad(x)
+
     def backward_prop(self, inputs, outputs, lossFunction, W, b, activations):
         ## returns gradient of weights, biases
         num_samples = inputs.shape[0]
@@ -135,7 +122,6 @@ class NeuralNet:
             curr = self.layer_sizes[i+1]
             Dw.append(np.zeros((curr,prev)))
             Db.append(np.zeros((curr,1)))
-            
 
         for s in range(num_samples):
             x = inputs[s]
@@ -157,7 +143,7 @@ class NeuralNet:
                 da.append(np.zeros((curr,1)))
 
             
-            # cross entropy
+            # cross entropy To Do : Square error func
             da[self.L] = (fx-y)
             for l in range(self.L,0,-1):
                 # print("Layer",l)
@@ -181,7 +167,7 @@ class NeuralNet:
                 Dw[l] = Dw[l] + dw[l]
                 Db[l] = Db[l] + db[l]
         # for l in range(self.L):
-        #     Dw[l] = Dw[l]/num_samples
+        #     Dw[l] = Dw[l]/num_samples  ### Unnecessary
         #     Db[l] = Db[l]/num_samples
         return Dw,Db
 
@@ -194,6 +180,7 @@ class NeuralNet:
             if class_actual[i]== class_predicted[i]:
                 accurate += 1.0
         return (accurate/size)*100
+
     def SGD(self, eta, gamma, optimizer,  train_inputs, train_outputs, batch_size, loss_fn , decay):
             st = 0
             end = batch_size
@@ -223,7 +210,7 @@ class NeuralNet:
 
                 assert(y_hat.shape  == mini_output.shape)
 
-                grads = self.backward_prop(mini_input,mini_output, 'cross_entropy',self.W,self.b,self.activations[0])
+                grads = self.backward_prop(mini_input,mini_output,loss_fn,self.W,self.b,self.activations[0])
                 ## grads should have dW and db
                 if optimizer == "nesterov":
                     self.W = tempW
@@ -342,7 +329,7 @@ class NeuralNet:
 
                 assert(y_hat.shape  == mini_output.shape)
 
-                grads = self.backward_prop(mini_input,mini_output, 'cross_entropy',self.W,self.b,self.activations[0])
+                grads = self.backward_prop(mini_input,mini_output,loss_fn,self.W,self.b,self.activations[0])
                 ## grads should have dW and db
                 dW = grads[0]
                 db = grads[1]
@@ -370,13 +357,90 @@ class NeuralNet:
             self.moments = (momentW , momentb)
             self.v = (v_w,v_b)
             return loss
+    def nadam(self, eta,optimizer,  train_inputs, train_outputs, batch_size, loss_fn , decay):
+            ## Reference : https://medium.com/konvergen/modifying-adam-to-use-nesterov-accelerated-gradients
+            st = 0
+            end = batch_size
+            sample_size = train_inputs.shape[0]
+            loss = 0
+            ep = 1e-8
+            beta1 = 0.9
+            beta2 = 0.99
+            
+            v_w = self.v[0]
+            v_b = self.v[1]
+            momentW = self.moments[0]
+            momentb = self.moments[1]
+            v_wh = []
+            v_bh = []
+            for i in range(self.L):
+                a = self.layer_sizes[i]
+                b = self.layer_sizes[i+1]
+                v_wh.append(np.zeros((b,a)))
+                v_bh.append(np.zeros((b,1)))
+            momentWh = []
+            momentbh = []
+            momentWn = []
+            momentbn = []
+            for i in range(self.L):
+                a = self.layer_sizes[i]
+                b = self.layer_sizes[i+1]
+                momentWh.append(np.zeros((b,a)))
+                momentbh.append(np.zeros((b,1)))
+                momentWn.append(np.zeros((b,a)))
+                momentbn.append(np.zeros((b,1)))
+            while(end <= sample_size):
+            
+                mini_input = train_inputs[st:end]
+                mini_output = train_outputs[st:end]
+                # print("batch",end/batch_size)
+                st = end 
+                end = st+batch_size 
+                
+                
+                ### Network predicted outputs ###
+                y_hat = self.forward(mini_input)
+
+                assert(y_hat.shape  == mini_output.shape)
+
+                grads = self.backward_prop(mini_input,mini_output,loss_fn,self.W,self.b,self.activations[0])
+                ## grads should have dW and db
+                dW = grads[0]
+                db = grads[1]
+                for i in range(self.L):
+                    momentW[i] = np.multiply(beta1,momentW[i]) + np.multiply(1 - beta1,dW[i])
+                    momentb[i] = np.multiply(beta1,momentb[i])+ np.multiply(1-beta1,db[i])
+                for i in range(self.L):
+                    v_w[i] = np.multiply(beta2,v_w[i]) + np.multiply(1-beta2, np.power(dW[i],2))
+                    v_b[i] = np.multiply(beta2,v_b[i]) + np.multiply(1-beta2, np.power(db[i],2))
+                for i in range(self.L):
+                    momentWh[i] = momentW[i] / (1 - np.power(beta1,self.t))
+                    momentbh[i] = momentb[i] / (1 - np.power(beta1,self.t))
+                    v_wh[i] = v_w[i] / (1-np.power(beta2,self.t))
+                    v_bh[i] = v_b[i] / (1-np.power(beta2,self.t))
+                for i in range(self.L):
+                    momentWn[i] = np.multiply(beta1,momentWh[i]) + np.multiply(1 - beta1,dW[i])
+                    momentbn[i] = np.multiply(beta1,momentbh[i])+ np.multiply(1-beta1,db[i])
+                for i in range(self.L):
+                    self.W[i] -= eta * np.multiply(1 / (np.power(v_wh[i]+ ep ,1/2)) , momentWn[i])
+                    self.b[i] -= eta * np.multiply(1 / (np.power(v_bh[i]+ ep ,1/2)) , momentbn[i])
+
+
+                ##update loss ##
+                if loss_fn == 'cross_entropy':
+                    loss += log_loss(mini_output,y_hat)
+                elif loss_fn == 'square_error':
+                    loss += mean_squared_error(mini_output,y_hat)
+            self.moments = (momentW , momentb)
+            self.v = (v_w,v_b)
+            return loss
     def fit(self, train_inputs, valid_inputs, train_outputs, valid_outputs, batch_size, loss_fn, eta, gamma, decay, optimizer):
         ## All inputs and outputs are numpy arrays
         ### Gradient Descent ####
         train_size = train_inputs.shape[0]
         valid_size = valid_inputs.shape[0] 
         self.t = 0
-        max_epochs = 20
+        max_epochs = 15
         self.valid_error = []
         v_w = []
         v_b = []
@@ -402,8 +466,10 @@ class NeuralNet:
                 loss = self.SGD( eta,gamma , optimizer , train_inputs , train_outputs , batch_size , loss_fn,decay)
             elif optimizer == 'rmsprop':
                 loss = self.rmsprop( eta, optimizer , train_inputs , train_outputs , batch_size , loss_fn,decay)
-            else:
+            elif optimizer == 'adam':
                 loss = self.adam( eta, optimizer , train_inputs , train_outputs , batch_size , loss_fn,decay)
+            elif optimizer == 'nadam':
+                loss = self.nadam( eta, optimizer , train_inputs , train_outputs , batch_size , loss_fn,decay)
 
             net_pred = self.forward(train_inputs)
             ## Print Loss and change in accuracy for each epoch for Training####
