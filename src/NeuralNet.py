@@ -245,8 +245,8 @@ class NeuralNet:
                 elif loss_fn == 'square_error':
                     loss += mean_squared_error(mini_output,y_hat)
                 
-            print('W', self.W)
-            print('b', self.b)
+            # print('W', self.W)
+            # print('b', self.b)
             return loss
     def rmsprop(self, eta,optimizer,  train_inputs, train_outputs, batch_size, loss_fn , decay):
             st = 0
@@ -317,6 +317,8 @@ class NeuralNet:
             print("Epoch :", t,"Training Loss :",loss, "Training Accuracy :", train_accuracy )
 
             net_pred_valid = self.forward(valid_inputs)
+            for a in (net_pred_valid):
+                print(a,np.sum(a))
             valid_loss = 0
             ## Print Loss and change in accuracy for each epoch for Validation####
             if loss_fn == 'cross_entropy':
