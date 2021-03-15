@@ -35,17 +35,20 @@ def dataset():
     for x in X:
       a.append((np.asarray(x)).flatten())
     return np.asarray(a)
+  def normalize(X):
+    return np.multiply(1/255,X)
   data = load()
-  X_train = flat(data['x_train'])
-  X_val = flat(data['x_val'])
+  X_train = normalize(flat(data['x_train']))
+  X_val = normalize(flat(data['x_val']))
   Y_train = np.eye(10)[data['y_train']]
   Y_val = np.eye(10)[data['y_val']]
+  ## (50k,784) (50k,10)
   return {
       'x_train' : X_train,
       'y_train' : Y_train,
       'x_val' : X_val,
       'y_val' : Y_val,
-      'x_test' : data['x_test'],
+      'x_test' : normalize(data['x_test']),
       'y_test' : data['y_test'],
   }
 # def flat(X):

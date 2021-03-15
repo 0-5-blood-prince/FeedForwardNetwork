@@ -44,16 +44,16 @@ class NeuralNet:
         ## check if this works for a vector
         # return 1/(1 + np.exp(-x))
     ### Output Activations ###
-    def softmax(self, x):
-        return np.exp(x - sc.logsumexp(x))
-    # def softmax(self, a):
-        
-    #     ### checking ##
-        # return sm(a)
-    #     # assert(a.shape[1]==10)
-    #     # e = np.exp(a)
-    #     # return e / np.sum(e, axis=1, keepdims=True)
-
+    def softmax(self, z):
+        assert len(z.shape) == 2
+        s = np.max(z, axis=1)
+        s = s[:, np.newaxis] # necessary step to do broadcasting
+        e_x = np.exp(z - s)
+        div = np.sum(e_x, axis=1)
+        div = div[:, np.newaxis] # dito
+        output = e_x / div
+        return output
+    
     def activate(self, activation, x):
         if activation == 'relu':
             # print(x)
@@ -160,8 +160,8 @@ class NeuralNet:
             # print(fx)
             # print(y)
             # print(l)
-            dw[l-1] = (1/num_samples)*np.matmul(da[l],h)
-            db[l-1] = (1/num_samples)*np.sum(da[l], axis = 1, keepdims=True)
+            dw[l-1] = np.matmul(da[l],h)
+            db[l-1] = np.sum(da[l], axis = 1, keepdims=True)
             # print(W[l-1].T.shape, da[l].shape, l)
             dh = np.matmul(W[l-1].T, da[l])
             hadamardProd = self.activation_grads(activations, self.aggLayer[l-1].T)
@@ -230,8 +230,8 @@ class NeuralNet:
                 elif loss_fn == 'square_error':
                     loss += mean_squared_error(mini_output,y_hat)
                 
-            print('W', self.W)
-            print('b', self.b)
+            # print('W', self.W)
+            # print('b', self.b)
             return loss
 
     def fit(self, train_inputs, valid_inputs, train_outputs, valid_outputs, batch_size, loss_fn, eta, gamma, decay, optimizer):
