@@ -1,7 +1,7 @@
 import wandb
-wandb.init(name = 'test_run',
-project='testing',
-)
+# wandb.init(name = 'test_run',
+# project='testing',
+# )
 import dataset
 import NeuralNet as nn
 
@@ -44,23 +44,24 @@ sweep_config = {
             'values':['random','Xavier']
         },
         'activation': {
-            'values': ['relu', 'elu', 'selu', 'softmax']
+            'values': ['tanh', 'sigmoid', 'relu']
         }
     }
 }
-
-# swwep_id = wandb.sweep(sweep_config, entity="sweep",project="testing")
+wandb.login(key="866040d7d81f67025d43e7d50ecd83d54b6cf977", relogin=False)
+sweep_id = wandb.sweep(sweep_config, entity="mooizz",project="testingsweep")
 def train():
     config_defaults = {
         'epochs' : 5,
         'batch_size' : 64,
-        'weight_decay' : 0.0005,
+        'weight_decay' : 0,
         'learning_rate' : 1e-3,
-        'activation' : 'relu',
-        'optimizer' : 'sgd',
+        'activation' : 'tanh',
+        'optimizer' : 'nadam',
         'num_hidden_layers' : 3,
         'hidden_layer_size' : 128,
-        'momentum' : 0.9
+        'momentum' : 0.9,
+        'weight_init' : 'Xavier'
     }
     wandb.init(config=config_defaults)
     config = wandb.config
@@ -72,12 +73,12 @@ def train():
     sizes.append(num_classes)
     activations.append('soft_max')
 
-    network = nn.NeuralNet(config.num_hidden_layers,sizes,activations)
-    network.fit(X_train, X_val , Y_train, Y_val, config.batch_size ,'cross_entropy',config.learning_rate,
+    network = nn.NeuralNet(config.num_hidden_layers,sizes,activations,config.weight_init)
+    network.fit(config.epochs, X_train, X_val , Y_train, Y_val, config.batch_size ,'cross_entropy',config.learning_rate,
      config.momentum ,config.weight_decay ,config.optimizer)
     
-network = nn.NeuralNet(3,[input_dim,128,128,128,num_classes],['tanh','tanh','tanh','soft_max'])
-decay = 0
-network.fit(X_train, X_val, Y_train, Y_val, 128,'cross_entropy', 1e-3, 0.9, 0, 'adam' )
+# network = nn.NeuralNet(3,[input_dim,128,128,128,num_classes],['sigmoid','sigmoid','sigmoid','soft_max'],'Xavier')
+# decay = 0
+# network.fit(5,X_train, X_val, Y_train, Y_val, 128,'cross_entropy', 1e-3, 0.9, 0, 'nadam' )
 # Configure the sweep – specify the parameters to search through, the search strategy, the optimization metric et all.
-### wandb.agent(sweep_id, train)
+wandb.agent(sweep_id, train)
