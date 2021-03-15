@@ -41,8 +41,18 @@ class NeuralNet:
         ## check if this works for a vector
         # return 1/(1 + np.exp(-x))
     ### Output Activations ###
-    def softmax(self, x):
-        return np.exp(x - sc.logsumexp(x))
+
+    # def softmax(self, x):
+    #     return np.exp(x - sc.logsumexp(x)) 
+    def softmax(self, z):
+        assert len(z.shape) == 2
+        s = np.max(z, axis=1)
+        s = s[:, np.newaxis] # necessary step to do broadcasting
+        e_x = np.exp(z - s)
+        div = np.sum(e_x, axis=1)
+        div = div[:, np.newaxis] # dito
+        output = e_x / div
+        return output
     # def softmax(self, a):
         
     #     ### checking ##
