@@ -8,6 +8,7 @@ def load():
   (x_train,y_train),(x_test,y_test) = fashion_mnist.load_data()
   x_train, x_val = x_train[:50000], x_train[50000:]
   y_train, y_val = y_train[:50000], y_train[50000:]
+  ### X_train (50k,28,28) Y_train (50k,1) [0,1,...9]    [1 0 0 0 0 0 ...] , [0 0 1 0 0 0...]
   return {
       'x_train' : x_train,
       'y_train' : y_train,
@@ -40,6 +41,7 @@ def dataset():
   X_val = flat(data['x_val'])
   Y_train = np.eye(10)[data['y_train']]
   Y_val = np.eye(10)[data['y_val']]
+  ## (50k,784) (50k,10)
   return {
       'x_train' : X_train,
       'y_train' : Y_train,

@@ -37,9 +37,9 @@ class NeuralNet:
         ## works for vector
         return np.tanh(x)
     def sigmoid(self, x):
-        # return expit(x)
+        return expit(x)
         ## check if this works for a vector
-        return 1/(1 + np.exp(-x))
+        # return 1/(1 + np.exp(-x))
     ### Output Activations ###
     def softmax(self, x):
         return np.exp(x - sc.logsumexp(x))
@@ -101,9 +101,6 @@ class NeuralNet:
 
         output = h[-1]
         # print('nn 94, actLayer shape:' + str(len(self.actLayer[0])))
-        
-
-
         return output
     def softmax_grad(x):
         pass
@@ -117,7 +114,6 @@ class NeuralNet:
             return f*(1-f)
         elif activation == 'softmax':
             return self.softmax_grad(x)
-
     def backward_prop(self, inputs, outputs, lossFunction, W, b, activations):
         ## returns gradient of weights, biases
         num_samples = inputs.shape[0]
@@ -177,6 +173,7 @@ class NeuralNet:
         for l in range(self.L):
             Dw[l] = Dw[l]/num_samples
             Db[l] = Db[l]/num_samples
+
         return Dw,Db
 
     def update_params(self, grads, eta, optimizer):
@@ -219,7 +216,7 @@ class NeuralNet:
 
                 assert(y_hat.shape  == mini_output.shape)
 
-                grads = self.backward_prop(mini_input,mini_output, 'cross_entropy',self.W,self.b,'relu')
+                grads = self.backward_prop(mini_input,mini_output, 'cross_entropy',self.W,self.b,self.activations[0])
                 ## grads should have dW and db
                 
                 dW = grads[0]
@@ -244,8 +241,55 @@ class NeuralNet:
                         self.W[i] -= momentW[i]
                         self.b[i] -= momentb[i]
                 # if(end == sample_size):
-                print('W', self.W)
-                print('b', self.b)
+                
+
+                ##update loss ##
+                if loss_fn == 'cross_entropy':
+                    loss += log_loss(mini_output,y_hat)
+                elif loss_fn == 'square_error':
+                    loss += mean_squared_error(mini_output,y_hat)
+            # print('W', self.W)
+            # print('b', self.b)
+            return loss
+    def rmsprop(self, eta,optimizer,  train_inputs, train_outputs, batch_size, loss_fn , decay):
+            st = 0
+            end = batch_size
+            sample_size = train_inputs.shape[0]
+            loss = 0
+            ep = 1e-8
+            beta = 0.99
+            while(end <= sample_size):
+            
+                mini_input = train_inputs[st:end]
+                mini_output = train_outputs[st:end]
+                st = end 
+                end = st+batch_size 
+                print("batch",end/batch_size)
+                
+                ### Network predicted outputs ###
+                y_hat = self.forward(mini_input)
+
+                assert(y_hat.shape  == mini_output.shape)
+
+                grads = self.backward_prop(mini_input,mini_output, 'cross_entropy',self.W,self.b,'relu')
+                ## grads should have dW and db
+                dW = grads[0]
+                db = grads[1]
+                v_w = []
+                v_b = []
+                for i in range(self.L):
+                    a = self.layer_sizes[i]
+                    b = self.layer_sizes[i+1]
+                    v_w.append(np.zeros((b,a)))
+                    v_b.append(np.zeros((b,1)))
+                for i in range(self.L):
+                    v_w[i] = np.multiply(beta,v_w[i]) + np.multiply(1-beta, np.power(dW[i],2))
+                    v_b[i] = np.multiply(beta,v_b[i]) + np.multiply(1-beta, np.power(db[i],2))
+                
+                for i in range(self.L):
+                    self.W[i] -= eta * np.multiply(1 / (np.power(v_w[i]+ ep ,1/2)) , dW[i])
+                    self.b[i] -= eta * np.multiply(1 / (np.power(v_b[i]+ ep ,1/2)) , db[i])
+
 
                 ##update loss ##
                 if loss_fn == 'cross_entropy':
@@ -253,21 +297,23 @@ class NeuralNet:
                 elif loss_fn == 'square_error':
                     loss += mean_squared_error(mini_output,y_hat)
             return loss
-
     def fit(self, train_inputs, valid_inputs, train_outputs, valid_outputs, batch_size, loss_fn, eta, gamma, decay, optimizer):
         ## All inputs and outputs are numpy arrays
         ### Gradient Descent ####
         train_size = train_inputs.shape[0]
         valid_size = valid_inputs.shape[0] 
         t = 0
-        max_epochs = 3
+        max_epochs = 20
         while(t<max_epochs):
             t+=1
             loss = 0
             #### Minibatch ####
             if optimizer == 'sgd' or optimizer == 'momentum' or optimizer == 'nesterov':
                 loss = self.SGD( eta,gamma , optimizer , train_inputs , train_outputs , batch_size , loss_fn,decay)
-
+            elif optimizer == 'rmsprop':
+                loss = self.rmsprop(eta, optimizer , train_inputs, train_outputs , batch_size , loss_fn , decay)
+            else:
+                pass
             net_pred = self.forward(train_inputs)
             ## Print Loss and change in accuracy for each epoch for Training####
             train_accuracy = self.accuracy(net_pred, train_outputs)
