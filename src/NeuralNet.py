@@ -7,7 +7,7 @@ from scipy.special import softmax as sm
 import scipy.special as sc
 import wandb
 class NeuralNet:
-    def __init__(self, num_hidden_layers, layer_sizes ,activations ):
+    def __init__(self, num_hidden_layers, layer_sizes ,activations, initialization ):
         ### first element in layer_sizes is input dimension and last element is output dimension##
         self.L = num_hidden_layers + 1 # doesn't include input layer
         self.input_dim = layer_sizes[0]
@@ -25,7 +25,10 @@ class NeuralNet:
         for i in range(self.L):
             a = self.layer_sizes[i]
             b = self.layer_sizes[i+1]
-            self.W.append(  np.random.randn(b,a)*( np.sqrt(2/(a+b)) ) )
+            if initialization == 'Xavier':
+                self.W.append(  np.random.randn(b,a)*( np.sqrt(2/(a+b)) ) )
+            else:
+                self.W.append(  np.random.randn(b,a)*(0.01))
         self.aggLayer = []  # to store h's
         self.actLayer = []  # to store a's
 
@@ -113,63 +116,110 @@ class NeuralNet:
 
     def backward_prop(self, inputs, outputs, lossFunction, W, b, activations):
         ## returns gradient of weights, biases
+        # num_samples = inputs.shape[0]
+        # output_dim = outputs.shape[1]
+        # Dw = []
+        # Db = []
+        # for i in range(self.L):
+        #     prev = self.layer_sizes[i]  
+        #     curr = self.layer_sizes[i+1]
+        #     Dw.append(np.zeros((curr,prev)))
+        #     Db.append(np.zeros((curr,1)))
+
+        # for s in range(num_samples):
+        #     x = inputs[s]
+        #     y = outputs[s].reshape((output_dim,1))
+        #     fx = self.actLayer[-1][s].reshape((output_dim,1))
+        #     # print("ACtlayer size",len(self.actLayer))
+        #     dw = []
+        #     db = []
+        #     da = []
+        #     dh = []
+        #     dh.append(np.zeros((inputs.shape[1],1)))
+        #     da.append(np.zeros((inputs.shape[1],1)))
+        #     for i in range(self.L):
+        #         prev = self.layer_sizes[i]  
+        #         curr = self.layer_sizes[i+1]
+        #         dw.append(np.zeros((curr,prev)))
+        #         db.append(np.zeros((curr,1)))
+        #         dh.append(np.zeros((curr,1)))
+        #         da.append(np.zeros((curr,1)))
+
+            
+        #     # cross entropy To Do : Square error func
+        #     da[self.L] = (fx-y)
+        #     for l in range(self.L,0,-1):
+        #         # print("Layer",l)
+        #         # for ll in range(0, self.L+1):
+        #         #     print('hi a h shapes', da[ll].shape, dh[ll].shape)
+        #         # for ll in range(self.L):
+        #         #     print('hi W b',dw[ll].shape,db[ll].shape)
+        #         h = self.actLayer[l-1][s].reshape((self.layer_sizes[l-1],1))
+        #         # print(da[l].shape,h.T.shape)
+        #         # print(fx)
+        #         # print(y)
+        #         # print(l)
+        #         dw[l-1] = np.matmul(da[l],h.T)
+        #         db[l-1] = da[l]
+        #         # print(W[l-1].T.shape, da[l].shape, l)
+        #         dh[l-1] = np.matmul(W[l-1].T, da[l])
+        #         hadamardProd = self.activation_grads(activations, self.aggLayer[l-1][s])
+        #         da[l-1] = np.multiply(dh[l-1],hadamardProd)
+
+        #     for l in range(self.L):
+        #         Dw[l] = Dw[l] + dw[l]
+        #         Db[l] = Db[l] + db[l]
+        # # for l in range(self.L):
+        # #     Dw[l] = Dw[l]/num_samples  ### Unnecessary
+        # #     Db[l] = Db[l]/num_samples
+        # return Dw,Db
+
         num_samples = inputs.shape[0]
         output_dim = outputs.shape[1]
-        Dw = []
-        Db = []
+        
+        x = inputs
+        y = outputs.reshape((num_samples,output_dim))
+        fx = self.actLayer[-1].reshape((num_samples,output_dim))
+        # print("ACtlayer size",len(self.actLayer))
+        dw = []
+        db = []
+        da = []
+        # dh = []
+        # dh.append(np.zeros((inputs.shape[1],num_samples)))
+        da.append(np.zeros((inputs.shape[1],num_samples)))
         for i in range(self.L):
             prev = self.layer_sizes[i]  
             curr = self.layer_sizes[i+1]
-            Dw.append(np.zeros((curr,prev)))
-            Db.append(np.zeros((curr,1)))
+            dw.append(np.zeros((curr,prev)))
+            db.append(np.zeros((curr,1)))
+            # dh.append(np.zeros((curr,num_samples)))
+            da.append(np.zeros((curr,num_samples)))
 
-        for s in range(num_samples):
-            x = inputs[s]
-            y = outputs[s].reshape((output_dim,1))
-            fx = self.actLayer[-1][s].reshape((output_dim,1))
-            # print("ACtlayer size",len(self.actLayer))
-            dw = []
-            db = []
-            da = []
-            dh = []
-            dh.append(np.zeros((inputs.shape[1],1)))
-            da.append(np.zeros((inputs.shape[1],1)))
-            for i in range(self.L):
-                prev = self.layer_sizes[i]  
-                curr = self.layer_sizes[i+1]
-                dw.append(np.zeros((curr,prev)))
-                db.append(np.zeros((curr,1)))
-                dh.append(np.zeros((curr,1)))
-                da.append(np.zeros((curr,1)))
+   
+            # cross entropy
+        # fx-y(outputLay) dim (numSamp, outputDim)
+        da[self.L] = (fx-y).T
+        for l in range(self.L,0,-1):
+            # print("Layer",l)
+            # for ll in range(0, self.L+1):
+            #     print('hi a h shapes', da[ll].shape, dh[ll].shape)
+            # for ll in range(self.L):
+            #     print('hi W b',dw[ll].shape,db[ll].shape)
+            h = self.actLayer[l-1].reshape((num_samples,self.layer_sizes[l-1]))
+            # print(da[l].shape,h.T.shape)
+            # print(fx)
+            # print(y)
+            # print(l)
+            dw[l-1] = np.matmul(da[l],h)
+            db[l-1] = np.sum(da[l], axis = 1, keepdims=True)
+            # print(W[l-1].T.shape, da[l].shape, l)
+            dh = np.matmul(W[l-1].T, da[l])
+            hadamardProd = self.activation_grads(activations, self.aggLayer[l-1].T)
+            da[l-1] = np.multiply(dh,hadamardProd)
 
-            
-            # cross entropy To Do : Square error func
-            da[self.L] = (fx-y)
-            for l in range(self.L,0,-1):
-                # print("Layer",l)
-                # for ll in range(0, self.L+1):
-                #     print('hi a h shapes', da[ll].shape, dh[ll].shape)
-                # for ll in range(self.L):
-                #     print('hi W b',dw[ll].shape,db[ll].shape)
-                h = self.actLayer[l-1][s].reshape((self.layer_sizes[l-1],1))
-                # print(da[l].shape,h.T.shape)
-                # print(fx)
-                # print(y)
-                # print(l)
-                dw[l-1] = np.matmul(da[l],h.T)
-                db[l-1] = da[l]
-                # print(W[l-1].T.shape, da[l].shape, l)
-                dh[l-1] = np.matmul(W[l-1].T, da[l])
-                hadamardProd = self.activation_grads(activations, self.aggLayer[l-1][s])
-                da[l-1] = np.multiply(dh[l-1],hadamardProd)
+        
+        return dw,db
 
-            for l in range(self.L):
-                Dw[l] = Dw[l] + dw[l]
-                Db[l] = Db[l] + db[l]
-        # for l in range(self.L):
-        #     Dw[l] = Dw[l]/num_samples  ### Unnecessary
-        #     Db[l] = Db[l]/num_samples
-        return Dw,Db
 
     def accuracy(self, predicted, actual):
         class_predicted = np.argmax(predicted,axis= 1)
@@ -179,7 +229,7 @@ class NeuralNet:
         for i in range(size):
             if class_actual[i]== class_predicted[i]:
                 accurate += 1.0
-        return (accurate/size)*100
+        return (accurate/size)
 
     def SGD(self, eta, gamma, optimizer,  train_inputs, train_outputs, batch_size, loss_fn , decay):
             st = 0
@@ -230,8 +280,10 @@ class NeuralNet:
                         momentb[i] = np.multiply(gamma,momentb[i])+ np.multiply(eta,db[i])
                         self.W[i] -= momentW[i]
                         self.b[i] -= momentb[i]
+                        self.W[i] -= (eta*decay)*(self.W[i])
+                        self.b[i] -= (eta*decay)*(self.b[i])
                 # if(end == sample_size):
-                    
+                
 
                 ##update loss ##
                 if loss_fn == 'cross_entropy':
@@ -241,6 +293,7 @@ class NeuralNet:
                 
             # print('W', self.W)
             # print('b', self.b)
+            
             self.moments = (momentW,momentb)
             return loss
     def rmsprop(self, eta,optimizer,  train_inputs, train_outputs, batch_size, loss_fn , decay):
@@ -279,7 +332,10 @@ class NeuralNet:
                 for i in range(self.L):
                     self.W[i] -= eta * np.multiply(1 / (np.power(v_w[i]+ ep ,1/2)) , dW[i])
                     self.b[i] -= eta * np.multiply(1 / (np.power(v_b[i]+ ep ,1/2)) , db[i])
-
+                    self.W[i] -= (eta*decay)*(self.W[i])
+                    self.b[i] -= (eta*decay)*(self.b[i])
+                # self.W -= (eta*decay)*(self.W)
+                # self.b -= (eta*decay)*(self.b)
 
                 ##update loss ##
                 if loss_fn == 'cross_entropy':
@@ -347,8 +403,11 @@ class NeuralNet:
                 for i in range(self.L):
                     self.W[i] -= eta * np.multiply(1 / (np.power(v_wh[i]+ ep ,1/2)) , momentWh[i])
                     self.b[i] -= eta * np.multiply(1 / (np.power(v_bh[i]+ ep ,1/2)) , momentbh[i])
+                    self.W[i] -= (eta*decay)*(self.W[i])
+                    self.b[i] -= (eta*decay)*(self.b[i])
 
-
+                # self.W -= (eta*decay)*(self.W)
+                # self.b -= (eta*decay)*(self.b)
                 ##update loss ##
                 if loss_fn == 'cross_entropy':
                     loss += log_loss(mini_output,y_hat)
@@ -424,7 +483,10 @@ class NeuralNet:
                 for i in range(self.L):
                     self.W[i] -= eta * np.multiply(1 / (np.power(v_wh[i]+ ep ,1/2)) , momentWn[i])
                     self.b[i] -= eta * np.multiply(1 / (np.power(v_bh[i]+ ep ,1/2)) , momentbn[i])
-
+                    self.W[i] -= (eta*decay)*(self.W[i])
+                    self.b[i] -= (eta*decay)*(self.b[i])
+                # self.W -= (eta*decay)*(self.W)
+                # self.b -= (eta*decay)*(self.b)
 
                 ##update loss ##
                 if loss_fn == 'cross_entropy':
@@ -434,13 +496,12 @@ class NeuralNet:
             self.moments = (momentW , momentb)
             self.v = (v_w,v_b)
             return loss
-    def fit(self, train_inputs, valid_inputs, train_outputs, valid_outputs, batch_size, loss_fn, eta, gamma, decay, optimizer):
+    def fit(self, max_epochs, train_inputs, valid_inputs, train_outputs, valid_outputs, batch_size, loss_fn, eta, gamma, decay, optimizer):
         ## All inputs and outputs are numpy arrays
         ### Gradient Descent ####
         train_size = train_inputs.shape[0]
         valid_size = valid_inputs.shape[0] 
         self.t = 0
-        max_epochs = 15
         self.valid_error = []
         v_w = []
         v_b = []
@@ -477,7 +538,7 @@ class NeuralNet:
             print("Epoch :", self.t,"Training Loss :",loss, "Training Accuracy :", train_accuracy )
 
             net_pred_valid = self.forward(valid_inputs)
-            print(net_pred_valid)
+            # print(net_pred_valid)
             valid_loss = 0
             ## Print Loss and change in accuracy for each epoch for Validation####
             if loss_fn == 'cross_entropy':
@@ -491,8 +552,8 @@ class NeuralNet:
             self.valid_error.append(valid_loss)
             valid_accuracy = self.accuracy(net_pred_valid, valid_outputs)
             print("Epoch :", self.t,"Validation Loss :",valid_loss, "Validation Accuracy :",valid_accuracy )
-            # wandb.log({ "Epoch": t, "Train Loss": loss, "Train Acc": train_accuracy, "Valid Loss": valid_loss, "Valid Acc": valid_accuracy})
-
+            wandb.log({ "epoch": self.t, "loss": loss, "accuracy": train_accuracy, "val_loss": valid_loss, "val_accuracy": valid_accuracy})
+        print("e_"+str(max_epochs)+"hl_"+str(self.L-1)+"ac_"+self.activations[0]+"bs_"+str(batch_size)+"opt_"+optimizer)
         ### log training ............... ###
 
 
