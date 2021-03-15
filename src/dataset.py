@@ -1,4 +1,5 @@
 import os
+import math
 import wandb
 import numpy as np
 from keras.datasets import fashion_mnist 
@@ -6,8 +7,12 @@ from keras.utils import np_utils
 labels = ["Tshirt","Trouser","Pullover","Dress","Coat","Sandal","Shirt","Sneaker","Bag","Boot"]
 def load():
   (x_train,y_train),(x_test,y_test) = fashion_mnist.load_data()
-  x_train, x_val = x_train[:50000], x_train[50000:]
-  y_train, y_val = y_train[:50000], y_train[50000:]
+  size = len(x_train)
+  # print(size)
+  train_size = math.floor( (0.9)*size)
+  # train_size = 10000
+  x_train, x_val = x_train[:train_size], x_train[train_size:]
+  y_train, y_val = y_train[:train_size], y_train[train_size:]
   ### X_train (50k,28,28) Y_train (50k,1) [0,1,...9]    [1 0 0 0 0 0 ...] , [0 0 1 0 0 0...]
   return {
       'x_train' : x_train,
