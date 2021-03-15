@@ -46,7 +46,7 @@ class NeuralNet:
     # def softmax(self, a):
         
     #     ### checking ##
-    #     return sm(a)
+        # return sm(a)
     #     # assert(a.shape[1]==10)
     #     # e = np.exp(a)
     #     # return e / np.sum(e, axis=1, keepdims=True)
@@ -164,30 +164,16 @@ class NeuralNet:
                 db[l-1] = da[l]
                 # print(W[l-1].T.shape, da[l].shape, l)
                 dh[l-1] = np.matmul(W[l-1].T, da[l])
-                da[l-1] = np.multiply(dh[l-1],
-                self.activation_grads(activations, self.aggLayer[l-1][s]))
+                hadamardProd = self.activation_grads(activations, self.aggLayer[l-1][s])
+                da[l-1] = np.multiply(dh[l-1],hadamardProd)
 
             for l in range(self.L):
                 Dw[l] = Dw[l] + dw[l]
                 Db[l] = Db[l] + db[l]
-        for l in range(self.L):
-            Dw[l] = Dw[l]/num_samples
-            Db[l] = Db[l]/num_samples
-
+        # for l in range(self.L):
+        #     Dw[l] = Dw[l]/num_samples
+        #     Db[l] = Db[l]/num_samples
         return Dw,Db
-
-    def update_params(self, grads, eta, optimizer):
-        dW = grads[0]
-        db = grads[1]
-        ### Assuming dW and db has the grads
-        if optimizer == 'gd':
-            for i in range(self.L):
-                self.W[i] -= np.multiply(eta,dW[i])
-                self.b[i] -= np.multiply(eta,db[i])
-
-        else:
-            pass
-        ### Other optimzers are to be implemented
 
     def accuracy(self, predicted, actual):
         class_predicted = np.argmax(predicted,axis= 1)
@@ -241,15 +227,16 @@ class NeuralNet:
                         self.W[i] -= momentW[i]
                         self.b[i] -= momentb[i]
                 # if(end == sample_size):
-                
+                    
 
                 ##update loss ##
                 if loss_fn == 'cross_entropy':
                     loss += log_loss(mini_output,y_hat)
                 elif loss_fn == 'square_error':
                     loss += mean_squared_error(mini_output,y_hat)
-            # print('W', self.W)
-            # print('b', self.b)
+                
+            print('W', self.W)
+            print('b', self.b)
             return loss
     def rmsprop(self, eta,optimizer,  train_inputs, train_outputs, batch_size, loss_fn , decay):
             st = 0
