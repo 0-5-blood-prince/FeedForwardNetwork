@@ -76,6 +76,7 @@ def sassy_conf(y_true, y_pred, labels, ymap=None, figsize=(10,10)):
     cm = pd.DataFrame(cm, index=labels, columns=labels)
     cm.index.name = 'Actual'
     cm.columns.name = 'Predicted'
+    plt.figure(dpi = 100)
     fig, ax = plt.subplots(figsize=figsize)
     sns.heatmap(cm, annot=annot, fmt='', ax=ax, cmap="YlGnBu")
     plt.ylim([nrows, -.5])
@@ -109,9 +110,9 @@ def train():
         pred.append(labels[predictions[i]])
     
     # Q7_CF(Y_test, predictions)
-    sassy_conf(Yt, pred, labels)
+    # sassy_conf(Yt, pred, labels)
     wandb.log({"conf_mat" : wandb.plot.confusion_matrix(probs=None,
-                        y_true=Yt, preds=pred,
+                        y_true=Y_test, preds=predictions,
                         class_names=labels)})
 
 # train()
@@ -135,7 +136,7 @@ def Q7_CF():
             },
             'hidden_layer_size': {  
                 # 'values': [32,64,128]
-                'values': [128,256]
+                'values': [128, 256]
             },
             'weight_decay': {
                 # 'values': [0, 0.0005, 0.5]
