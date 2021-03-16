@@ -200,7 +200,11 @@ class NeuralNet:
    
             # cross entropy
         # fx-y(outputLay) dim (numSamp, outputDim)
-        da[self.L] = (fx-y).T
+        if lossFunction == 'cross_entropy':
+            da[self.L] = (fx-y).T
+        else:
+            da[self.L] =  (fx-y).T * (fx.T) * (1-(fx.T))
+
         for l in range(self.L,0,-1):
             # print("Layer",l)
             # for ll in range(0, self.L+1):
@@ -323,7 +327,7 @@ class NeuralNet:
 
                 assert(y_hat.shape  == mini_output.shape)
 
-                grads = self.backward_prop(mini_input,mini_output, 'cross_entropy',self.W,self.b,self.activations[0])
+                grads = self.backward_prop(mini_input,mini_output,loss_fn,self.W,self.b,self.activations[0])
                 ## grads should have dW and db
                 dW = grads[0]
                 db = grads[1]
