@@ -13,7 +13,7 @@ Y_val = data['y_val']
 input_dim = X_train.shape[1]
 num_classes = Y_train.shape[1]
 sweep_config = {
-    'method': 'random', #grid, random
+    'method': 'bayes', #grid, random
     'metric': {
       'name': 'val_accuracy',
       'goal': 'maximize'   
