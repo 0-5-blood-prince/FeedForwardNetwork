@@ -77,7 +77,7 @@ def train():
     network.fit(config.epochs, X_train, X_val , Y_train, Y_val, config.batch_size ,'cross_entropy',config.learning_rate,
      config.momentum ,config.weight_decay ,config.optimizer)
     
-# network = nn.NeuralNet(3,[input_dim,128,128,128,num_classes],['sigmoid','sigmoid','sigmoid','soft_max'],'Xavier')
+# network = nn.NeuralNet(3,[input_dim,64,64,64,num_classes],['tanh','tanh','tanh','soft_max'],'Xavier')
 # decay = 0
 # network.fit(5,X_train, X_val, Y_train, Y_val, 128,'cross_entropy', 1e-3, 0.9, 0, 'nadam' )
 # Configure the sweep – specify the parameters to search through, the search strategy, the optimization metric et all.

@@ -31,6 +31,8 @@ class NeuralNet:
                 self.W.append(  np.random.randn(b,a)*(0.01))
         self.aggLayer = []  # to store h's
         self.actLayer = []  # to store a's
+        self.best_valid_acc = 0.0
+        self.best_valid_loss = float('inf')
 
     #### Activation Functions ######
     def relu(self, x):
@@ -556,8 +558,11 @@ class NeuralNet:
                 eta = eta/2
             self.valid_error.append(valid_loss)
             valid_accuracy = self.accuracy(net_pred_valid, valid_outputs)
+            self.best_valid_acc = max(self.best_valid_acc, valid_accuracy)
+            self.best_valid_loss = min(self.best_valid_loss, valid_loss)
             print("Epoch :", self.t,"Validation Loss :",valid_loss, "Validation Accuracy :",valid_accuracy )
-            wandb.log({ "epoch": self.t, "loss": loss, "accuracy": train_accuracy, "val_loss": valid_loss, "val_accuracy": valid_accuracy})
+            wandb.log({ "epoch": self.t, "loss": train_loss, "accuracy": train_accuracy, "val_loss": valid_loss, "val_accuracy": valid_accuracy})
+        wandb.log({"best_valid_loss": self.best_valid_loss, "best_valid_accuracy": self.best_valid_acc})
         print("e_"+str(max_epochs)+"hl_"+str(self.L-1)+"ac_"+self.activations[0]+"bs_"+str(batch_size)+"opt_"+optimizer)
         ### log training ............... ###
 
