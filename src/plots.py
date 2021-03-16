@@ -123,31 +123,31 @@ def Q7_CF(y_true, y_pred):
         'parameters': {
             'epochs': {
                 # 'values': [5, 10, 15]
-                'values': [5, 10, 15, 30]
+                'values': [15, 25]
             },
             'num_hidden_layers': {
                 # 'values': [3,4,5]
-                'values': [3,4,5]
+                'values': [3]
             },
             'hidden_layer_size': {  
                 # 'values': [32,64,128]
-                'values': [32,64,128,256]
+                'values': [128,256]
             },
             'weight_decay': {
                 # 'values': [0, 0.0005, 0.5]
-                'values': [0, 0.0005, 0.5]
+                'values': [0, 0.5]
             },
             'learning_rate': {
                 # 'values': [1e-3, 1e-4]
-                'values': [1e-3, 1e-4]
+                'values': [1e-4]
             },
             'optimizer': {
                 # 'values': ['sgd', 'momentum','nesterov', 'rmsprop','adam','nadam']
-                'values': ['sgd', 'momentum','nesterov', 'rmsprop','adam','nadam']
+                'values': ['nesterov', 'rmsprop','adam']
             },
             'batch_size':{
                 # 'values': [16,32,64]
-                'values': [16,32,64]
+                'values': [64]
             },
             'weight_init':{
                 # 'values':['random','Xavier']
@@ -155,7 +155,7 @@ def Q7_CF(y_true, y_pred):
             },
             'activation': {
                 # 'values': ['tanh', 'sigmoid', 'relu']
-                'values': ['tanh', 'relu']
+                'values': ['tanh']
             }
         }
     }
