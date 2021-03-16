@@ -35,6 +35,7 @@ config_defaults = {
         'hidden_layer_size' : 128,
         'momentum' : 0.9,
         'weight_init' : 'Xavier'
+        'loss_fn':'cross_entropy'
     }
 def sassy_conf(y_true, y_pred, labels, ymap=None, figsize=(10,10)):
     """
@@ -109,13 +110,16 @@ def train():
     
     # Q7_CF(Y_test, predictions)
     sassy_conf(Yt, pred, labels)
+    wandb.log({"conf_mat" : wandb.plot.confusion_matrix(probs=None,
+                        y_true=Yt, preds=pred,
+                        class_names=labels})
 
 # train()
 
 def Q7_CF(y_true, y_pred):
     
     sweep_config = {
-        'method': 'bayes', #grid, random
+        'method': 'random', #grid, random
         'metric': {
         'name': 'val_accuracy',
         'goal': 'maximize'   
@@ -161,7 +165,8 @@ def Q7_CF(y_true, y_pred):
     }
     sweep_id = wandb.sweep(sweep_config, entity="mooizz",project="feedforwardfashion")
     wandb.agent(sweep_id, train)
-def Q8():
+def lossdiff():
+    
     wandb.init(project="feedforwardfashion",config=config_defaults)
     config = wandb.config
     sizes = [input_dim]
@@ -173,10 +178,21 @@ def Q8():
     activations.append('soft_max')
 
     network1 = nn.NeuralNet(config.num_hidden_layers,sizes,activations,config.weight_init)
-    network1.fit(config.epochs, X_train, X_val , Y_train, Y_val, config.batch_size ,'cross_entropy',config.learning_rate,
+    network1.fit(config.epochs, X_train, X_val , Y_train, Y_val, config.batch_size ,config.loss_fn,config.learning_rate,
      config.momentum ,config.weight_decay ,config.optimizer)
-    wandb.init(project="feedforwardfashion",config=config_defaults)
-    network2 = nn.NeuralNet(config.num_hidden_layers,sizes,activations,config.weight_init)
-    network2.fit(config.epochs, X_train, X_val , Y_train, Y_val, config.batch_size ,'square_error',config.learning_rate,
-     config.momentum ,config.weight_decay ,config.optimizer)
-Q8()
+def Q8():
+    sweep_config = {
+        'method': 'random', #grid, random
+        'metric': {
+        'name': 'val_accuracy',
+        'goal': 'maximize'   
+        },
+        'parameters': {
+            'loss_fn': {
+                # 'values': ['tanh', 'sigmoid', 'relu']
+                'values': ['cross_entropy','square_error']
+            }
+        }
+    }
+    sweep_id = wandb.sweep(sweep_config, entity="mooizz",project="feedforwardfashion")
+    wandb.agent(sweep_id, lossdiff)
