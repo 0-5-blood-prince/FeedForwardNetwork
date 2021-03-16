@@ -62,7 +62,7 @@ def dataset():
       'y_train' : Y_train,
       'x_val' : normalize(X_val),
       'y_val' : Y_val,
-      'x_test' : normalize(data['x_test']),
+      'x_test' : normalize(flat(data['x_test'])),
       'y_test' : data['y_test'],
   }
 # def flat(X):
