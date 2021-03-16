@@ -535,7 +535,12 @@ class NeuralNet:
             net_pred = self.forward(train_inputs)
             ## Print Loss and change in accuracy for each epoch for Training####
             train_accuracy = self.accuracy(net_pred, train_outputs)
-            print("Epoch :", self.t,"Training Loss :",loss, "Training Accuracy :", train_accuracy )
+            train_loss = 0
+            if loss_fn == 'cross_entropy':
+                train_loss += log_loss(train_outputs,net_pred)
+            elif loss_fn == 'square_error':
+                train_loss += mean_squared_error(train_outputs,net_pred)
+            print("Epoch :", self.t,"Training Loss :",train_loss, "Training Accuracy :", train_accuracy )
 
             net_pred_valid = self.forward(valid_inputs)
             # print(net_pred_valid)
