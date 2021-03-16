@@ -127,7 +127,7 @@ def Q7_CF():
         'parameters': {
             'epochs': {
                 # 'values': [5, 10, 15]
-                'values': [15, 25]
+                'values': [10, 15]
             },
             'num_hidden_layers': {
                 # 'values': [3,4,5]
