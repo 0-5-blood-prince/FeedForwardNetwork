@@ -49,7 +49,7 @@ sweep_config = {
     }
 }
 wandb.login(key="866040d7d81f67025d43e7d50ecd83d54b6cf977", relogin=False)
-sweep_id = wandb.sweep(sweep_config, entity="mooizz",project="testingsweep")
+sweep_id = wandb.sweep(sweep_config, entity="mooizz",project="feedforwardfashion")
 def train():
     config_defaults = {
         'epochs' : 5,
