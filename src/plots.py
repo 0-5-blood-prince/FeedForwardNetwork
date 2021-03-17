@@ -336,5 +336,5 @@ if __name__ == '__main__':
     elif(L[0] == 'Q8'):
         Q8()
     elif(L[0] == "Q10"):
-        numbers()
-        # Q10()
+        # numbers()
+        Q10()
