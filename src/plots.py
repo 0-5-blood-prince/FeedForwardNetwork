@@ -269,12 +269,12 @@ def numbers():
     for i in range(predictions.shape[0]):
         Yt.append(labels[number_test[i]])
         pred.append(labels[predictions[i]])
-    wandb.log({"test_accuracy" : network.accuracy(pred,Yt)})
+    # wandb.log({"test_accuracy" : network.accuracy(pred,Yt)})
     # Q7_CF(Y_test, predictions)
     # sassy_conf(Yt, pred, labels)
-    wandb.log({"conf_mat" : wandb.plot.confusion_matrix(probs=None,
-                        y_true=Y_test, preds=predictions,
-                        class_names=labels)})
+    # wandb.log({"conf_mat" : wandb.plot.confusion_matrix(probs=None,
+                        # y_true=Y_test, preds=predictions,
+                        # class_names=labels)})
 def Q10():
     sweep_config3 = {
         'method': 'grid', #grid, random
@@ -336,4 +336,4 @@ if __name__ == '__main__':
     elif(L[0] == 'Q8'):
         Q8()
     elif(L[0] == "Q10"):
-        Q10()
+        numbers()
