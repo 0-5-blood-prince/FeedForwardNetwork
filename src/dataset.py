@@ -16,12 +16,9 @@ def normalize(A):
 def mnist_data():
   (x_train,y_train),(x_test,y_test) = mnist.load_data()
   size = len(x_train)
-  # print(size)
   train_size = math.floor( (0.9)*size)
-  # train_size = 10000
   x_train, x_val = x_train[:train_size], x_train[train_size:]
   y_train, y_val = y_train[:train_size], y_train[train_size:]
-  ### X_train (50k,28,28) Y_train (50k,1) [0,1,...9]    [1 0 0 0 0 0 ...] , [0 0 1 0 0 0...]
   def flat(X):
     a = []
     for x in X:
@@ -48,9 +45,7 @@ def mnist_data():
 def load():
   (x_train,y_train),(x_test,y_test) = fashion_mnist.load_data()
   size = len(x_train)
-  # print(size)
   train_size = math.floor( (0.9)*size)
-  # train_size = 10000
   x_train, x_val = x_train[:train_size], x_train[train_size:]
   y_train, y_val = y_train[:train_size], y_train[train_size:]
   ### X_train (50k,28,28) Y_train (50k,1) [0,1,...9]    [1 0 0 0 0 0 ...] , [0 0 1 0 0 0...]
@@ -83,9 +78,6 @@ def dataset():
     for x in X:
       a.append((np.asarray(x)).flatten())
     return np.asarray(a)
-  # def normalize(X):
-  #   ## Min_Max Scaling
-  #   return np.multiply(1/255,X)
   data = load()
   X_train = (flat(data['x_train']))
   X_val = (flat(data['x_val']))
@@ -100,19 +92,3 @@ def dataset():
       'x_test' : normalize(flat(data['x_test'])),
       'y_test' : data['y_test'],
   }
-# def flat(X):
-#   a = []
-#   for x in X:
-#     a.append((np.asarray(x)).flatten())
-#   return np.asarray(a)
-############################# Checking ############################
-#wandb.init(project = 'dummy_DL')
-#log_images()
-# data = load()
-# X_train = flat(data['x_train'])
-# X_val = flat(data['x_val'])
-# Y_train = np.eye(10)[data['y_train']]
-# Y_val = np.eye(10)[data['y_val']]
-# print(X_train.shape)
-# print(Y_train)
-mnist_data()

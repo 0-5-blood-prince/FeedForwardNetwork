@@ -43,11 +43,7 @@ class NeuralNet:
         return np.tanh(x)
     def sigmoid(self, x):
         return expit(x)
-        ## check if this works for a vector
-        # return 1/(1 + np.exp(-x))
     ### Output Activations ###
-
-    
     def softmax(self, z):
         # Ref : stack overflow softmax implementation
         assert len(z.shape) == 2
@@ -176,18 +172,17 @@ class NeuralNet:
         # #     Db[l] = Db[l]/num_samples
         # return Dw,Db
 
+        ##### Above commented code is unoptimized version of the below code
         num_samples = inputs.shape[0]
         output_dim = outputs.shape[1]
         
         x = inputs
         y = outputs.reshape((num_samples,output_dim))
         fx = self.actLayer[-1].reshape((num_samples,output_dim))
-        # print("ACtlayer size",len(self.actLayer))
         dw = []
         db = []
         da = []
-        # dh = []
-        # dh.append(np.zeros((inputs.shape[1],num_samples)))
+        
         da.append(np.zeros((inputs.shape[1],num_samples)))
         for i in range(self.L):
             prev = self.layer_sizes[i]  
@@ -206,24 +201,14 @@ class NeuralNet:
             da[self.L] =  (fx-y).T * (fx.T) * (1-(fx.T))
 
         for l in range(self.L,0,-1):
-            # print("Layer",l)
-            # for ll in range(0, self.L+1):
-            #     print('hi a h shapes', da[ll].shape, dh[ll].shape)
-            # for ll in range(self.L):
-            #     print('hi W b',dw[ll].shape,db[ll].shape)
+           
             h = self.actLayer[l-1].reshape((num_samples,self.layer_sizes[l-1]))
-            # print(da[l].shape,h.T.shape)
-            # print(fx)
-            # print(y)
-            # print(l)
+            
             dw[l-1] = np.matmul(da[l],h)
             db[l-1] = np.sum(da[l], axis = 1, keepdims=True)
-            # print(W[l-1].T.shape, da[l].shape, l)
             dh = np.matmul(W[l-1].T, da[l])
             hadamardProd = self.activation_grads(activations, self.aggLayer[l-1].T)
-            da[l-1] = np.multiply(dh,hadamardProd)
-
-        
+            da[l-1] = np.multiply(dh,hadamardProd) 
         return dw,db
 
 
@@ -252,8 +237,6 @@ class NeuralNet:
                 # print("batch",end/batch_size)
                 st = end 
                 end = st+batch_size 
-                
-                
                 ### Network predicted outputs ###
                 if optimizer == "nesterov":
                     tempW = self.W
