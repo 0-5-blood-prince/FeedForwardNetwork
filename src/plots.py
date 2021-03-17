@@ -269,7 +269,7 @@ def numbers():
     for i in range(predictions.shape[0]):
         Yt.append(labels[number_test[i]])
         pred.append(labels[predictions[i]])
-    
+    wandb.log({"test_accuracy" : network.accuracy(pred,Yt)})
     # Q7_CF(Y_test, predictions)
     # sassy_conf(Yt, pred, labels)
     wandb.log({"conf_mat" : wandb.plot.confusion_matrix(probs=None,
@@ -322,7 +322,7 @@ def Q10():
         }
     }
     sweep_id = wandb.sweep(sweep_config3, entity="mooizz",project="feedforwardfashion")
-    wandb.agent(sweep_id, lossdiff)
+    wandb.agent(sweep_id, numbers)
 
 if __name__ == '__main__':
     L = sys.argv[1:]
@@ -335,3 +335,5 @@ if __name__ == '__main__':
         Q7()
     elif(L[0] == 'Q8'):
         Q8()
+    elif(L[0] == "Q10"):
+        Q10()
