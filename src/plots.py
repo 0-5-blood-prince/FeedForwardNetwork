@@ -34,7 +34,7 @@ config_defaults = {
         'num_hidden_layers' : 3,
         'hidden_layer_size' : 128,
         'momentum' : 0.9,
-        'weight_init' : 'Xavier'
+        'weight_init' : 'Xavier',
         'loss_fn':'cross_entropy'
     }
 def sassy_conf(y_true, y_pred, labels, ymap=None, figsize=(10,10)):
@@ -112,7 +112,7 @@ def train():
     sassy_conf(Yt, pred, labels)
     wandb.log({"conf_mat" : wandb.plot.confusion_matrix(probs=None,
                         y_true=Yt, preds=pred,
-                        class_names=labels})
+                        class_names=labels)})
 
 # train()
 
@@ -196,3 +196,4 @@ def Q8():
     }
     sweep_id = wandb.sweep(sweep_config, entity="mooizz",project="feedforwardfashion")
     wandb.agent(sweep_id, lossdiff)
+Q1()
