@@ -259,8 +259,8 @@ def numbers():
     number_data = dataset.mnist_data()
     
     network = nn.NeuralNet(config.num_hidden_layers,sizes,activations,config.weight_init)
-    # network.fit(config.epochs, number_data['x_train'], number_data['x_val'] , number_data['y_train'] ,number_data['y_val'] , config.batch_size ,'cross_entropy',config.learning_rate,
-    #  config.momentum ,config.weight_decay ,config.optimizer)
+    network.fit(config.epochs, number_data['x_train'], number_data['x_val'] , number_data['y_train'] ,number_data['y_val'] , config.batch_size ,'cross_entropy',config.learning_rate,
+     config.momentum ,config.weight_decay ,config.optimizer)
     fpred = np.asarray(network.forward(number_data['x_test']) )
     
     number_test = np.eye(10)[number_data['y_test']]

@@ -25,7 +25,8 @@ Plots.py:
 This contains code for generating various plots asked in the assignment.
 
 Steps to follow for Evaluation/Reciprocate the resutls in report:
-Question 1,7,8:
-    Run: "python plots.py Q<Question Number>"
+Question 1,7,8,10:
+    Run: "python plots.py QX"
+    to get results in report for Question 'X'
 Question 4,5,6:
     Run: "python experimenter.py"
