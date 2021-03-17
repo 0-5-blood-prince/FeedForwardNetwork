@@ -246,6 +246,83 @@ def Q8():
     }
     sweep_id = wandb.sweep(sweep_config2, entity="mooizz",project="feedforwardfashion")
     wandb.agent(sweep_id, lossdiff)
+def numbers():
+    wandb.init(project="feedforwardfashion",config=config_defaults)
+    config = wandb.config
+    sizes = [input_dim]
+    activations = []
+    for i in range(config.num_hidden_layers):
+        sizes.append(config.hidden_layer_size)
+        activations.append(config.activation)
+    sizes.append(num_classes)
+    activations.append('soft_max')
+    number_data = dataset.mnist_data()
+    
+    network = nn.NeuralNet(config.num_hidden_layers,sizes,activations,config.weight_init)
+    network.fit(config.epochs, number_data['x_train'], number_data['x_val'] , number_data['y_train'] ,number_data['y_val'] , config.batch_size ,'cross_entropy',config.learning_rate,
+     config.momentum ,config.weight_decay ,config.optimizer)
+    
+    predictions = np.argmax(network.forward(number_data['x_test']), axis=1)
+    Yt = []
+    pred = []
+    number_test = number_data['y_test']
+    for i in range(predictions.shape[0]):
+        Yt.append(labels[number_test[i]])
+        pred.append(labels[predictions[i]])
+    
+    # Q7_CF(Y_test, predictions)
+    # sassy_conf(Yt, pred, labels)
+    wandb.log({"conf_mat" : wandb.plot.confusion_matrix(probs=None,
+                        y_true=Y_test, preds=predictions,
+                        class_names=labels)})
+def Q10():
+    sweep_config3 = {
+        'method': 'grid', #grid, random
+        'metric': {
+        'name': 'val_accuracy',
+        'goal': 'maximize'   
+        },
+        'parameters': {
+            'epochs': {
+                # 'values': [5, 10, 15]
+                'values': [10]
+            },
+            'num_hidden_layers': {
+                # 'values': [3,4,5]
+                'values': [3]
+            },
+            'hidden_layer_size': {  
+                # 'values': [32,64,128]
+                'values': [128]
+            },
+            'weight_decay': {
+                # 'values': [0, 0.0005, 0.5]
+                'values': [0]
+            },
+            'learning_rate': {
+                # 'values': [1e-3, 1e-4]
+                'values': [1e-4]
+            },
+            'optimizer': {
+                # 'values': ['sgd', 'momentum','nesterov', 'rmsprop','adam','nadam']
+                'values': ['adam']
+            },
+            'batch_size':{
+                # 'values': [16,32,64]
+                'values': [64]
+            },
+            'weight_init':{
+                # 'values':['random','Xavier']
+                'values':['Xavier']
+            },
+            'activation': {
+                'values': ['tanh', 'sigmoid', 'relu']
+                # 'values': ['tanh']
+            }
+        }
+    }
+    sweep_id = wandb.sweep(sweep_config3, entity="mooizz",project="feedforwardfashion")
+    wandb.agent(sweep_id, lossdiff)
 
 if __name__ == '__main__':
     L = sys.argv[1:]
