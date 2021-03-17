@@ -11,6 +11,8 @@ from sklearn.metrics import confusion_matrix
 import wandb
 import dataset
 import NeuralNet as nn
+import sys
+import experimenter
 
 data = dataset.dataset()
 X_train = data['x_train']
@@ -116,7 +118,7 @@ def train():
 
 # train()
 
-def Q7_CF():
+def Q7():
     
     sweep_config = {
         'method': 'random', #grid, random
@@ -177,9 +179,21 @@ def lossdiff():
     sizes.append(num_classes)
     activations.append('soft_max')
 
-    network1 = nn.NeuralNet(config.num_hidden_layers,sizes,activations,config.weight_init)
-    network1.fit(config.epochs, X_train, X_val , Y_train, Y_val, config.batch_size ,config.loss_fn,config.learning_rate,
+    network = nn.NeuralNet(config.num_hidden_layers,sizes,activations,config.weight_init)
+    network.fit(config.epochs, X_train, X_val , Y_train, Y_val, config.batch_size ,config.loss_fn,config.learning_rate,
      config.momentum ,config.weight_decay ,config.optimizer)
+    predictions = np.argmax(network.forward(X_test), axis=1)
+    Yt = []
+    pred = []
+    for i in range(predictions.shape[0]):
+        Yt.append(labels[Y_test[i]])
+        pred.append(labels[predictions[i]])
+    
+    # Q7_CF(Y_test, predictions)
+    # sassy_conf(Yt, pred, labels)
+    wandb.log({"conf_mat" : wandb.plot.confusion_matrix(probs=None,
+                        y_true=Y_test, preds=predictions,
+                        class_names=labels)})
 def Q8():
     sweep_config2 = {
         'method': 'grid', #grid, random
@@ -190,7 +204,7 @@ def Q8():
         'parameters': {
             'epochs': {
                 # 'values': [5, 10, 15]
-                'values': [10, 15]
+                'values': [10]
             },
             'num_hidden_layers': {
                 # 'values': [3,4,5]
@@ -198,11 +212,11 @@ def Q8():
             },
             'hidden_layer_size': {  
                 # 'values': [32,64,128]
-                'values': [128, 256]
+                'values': [128]
             },
             'weight_decay': {
                 # 'values': [0, 0.0005, 0.5]
-                'values': [0, 0.5]
+                'values': [0]
             },
             'learning_rate': {
                 # 'values': [1e-3, 1e-4]
@@ -210,7 +224,7 @@ def Q8():
             },
             'optimizer': {
                 # 'values': ['sgd', 'momentum','nesterov', 'rmsprop','adam','nadam']
-                'values': ['nesterov', 'rmsprop','adam']
+                'values': ['rmsprop','adam']
             },
             'batch_size':{
                 # 'values': [16,32,64]
@@ -233,3 +247,13 @@ def Q8():
     sweep_id = wandb.sweep(sweep_config2, entity="mooizz",project="feedforwardfashion")
     wandb.agent(sweep_id, lossdiff)
 Q8()
+
+if __name__ == '__main__':
+    L = sys.argv[1:]
+    print(L)
+    if(L[0] == 'Q1'):
+        Q1()
+    elif(L[0] == 'Q7'):
+        Q7()
+    elif(L[0] == 'Q8'):
+        Q8()
