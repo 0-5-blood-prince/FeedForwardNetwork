@@ -27,10 +27,10 @@ def mnist_data():
     for x in X:
       a.append((np.asarray(x)).flatten())
     return np.asarray(a)
-  # def normalize(X):
-  #   ## Min_Max Scaling
-  #   return np.multiply(1/255,X)
-  # data = load()
+  def min_max_normalize(X):
+    ## Min_Max Scaling
+    return np.multiply(1/255,X)
+  data = load()
   X_train = (flat(x_train))
   X_val = (flat(x_val))
   Y_train = np.eye(10)[y_train]
@@ -38,11 +38,11 @@ def mnist_data():
   
   ## (50k,784) 
   return {
-      'x_train' : normalize(X_train),
-      'y_train' : y_train,
-      'x_val' : normalize(X_val),
-      'y_val' : y_val,
-      'x_test' : normalize(flat(x_test)),
+      'x_train' : min_max_normalize(X_train),
+      'y_train' : Y_train,
+      'x_val' : min_max_normalize(X_val),
+      'y_val' : Y_val,
+      'x_test' : min_max_normalize(flat(x_test)),
       'y_test' : y_test,
   }
 def load():
