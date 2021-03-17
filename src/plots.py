@@ -12,7 +12,6 @@ import wandb
 import dataset
 import NeuralNet as nn
 import sys
-import experimenter
 
 data = dataset.dataset()
 X_train = data['x_train']
@@ -194,6 +193,7 @@ def lossdiff():
     wandb.log({"conf_mat" : wandb.plot.confusion_matrix(probs=None,
                         y_true=Y_test, preds=predictions,
                         class_names=labels)})
+                        
 def Q8():
     sweep_config2 = {
         'method': 'grid', #grid, random
@@ -246,11 +246,12 @@ def Q8():
     }
     sweep_id = wandb.sweep(sweep_config2, entity="mooizz",project="feedforwardfashion")
     wandb.agent(sweep_id, lossdiff)
-Q8()
 
 if __name__ == '__main__':
     L = sys.argv[1:]
-    print(L)
+    if(len(L) == 0):
+        print('Give a question number as an argument. Eg: python plots.py Q7')
+        exit(0)
     if(L[0] == 'Q1'):
         Q1()
     elif(L[0] == 'Q7'):
