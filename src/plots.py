@@ -261,20 +261,18 @@ def numbers():
     network = nn.NeuralNet(config.num_hidden_layers,sizes,activations,config.weight_init)
     network.fit(config.epochs, number_data['x_train'], number_data['x_val'] , number_data['y_train'] ,number_data['y_val'] , config.batch_size ,'cross_entropy',config.learning_rate,
      config.momentum ,config.weight_decay ,config.optimizer)
-    
+    print('264, ', network.forward(number_data['x_test']).shape)
     predictions = np.argmax(network.forward(number_data['x_test']), axis=1)
     Yt = []
     pred = []
     number_test = number_data['y_test']
-    for i in range(predictions.shape[0]):
-        Yt.append(labels[number_test[i]])
-        pred.append(labels[predictions[i]])
-    # wandb.log({"test_accuracy" : network.accuracy(pred,Yt)})
+    
+    wandb.log({"test_accuracy" : network.accuracy(pred,Yt)})
     # Q7_CF(Y_test, predictions)
     # sassy_conf(Yt, pred, labels)
     # wandb.log({"conf_mat" : wandb.plot.confusion_matrix(probs=None,
-                        # y_true=Y_test, preds=predictions,
-                        # class_names=labels)})
+    #                     y_true=Y_test, preds=predictions,
+    #                     class_names=labels)})
 def Q10():
     sweep_config3 = {
         'method': 'grid', #grid, random
@@ -337,3 +335,4 @@ if __name__ == '__main__':
         Q8()
     elif(L[0] == "Q10"):
         numbers()
+        # Q10()

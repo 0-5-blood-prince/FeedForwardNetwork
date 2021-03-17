@@ -15,6 +15,8 @@ def normalize(A):
 
 def mnist_data():
   (x_train,y_train),(x_test,y_test) = mnist.load_data()
+  print(y_test.shape)
+  pass
   size = len(x_train)
   # print(size)
   train_size = math.floor( (0.9)*size)
@@ -30,7 +32,6 @@ def mnist_data():
   def min_max_normalize(X):
     ## Min_Max Scaling
     return np.multiply(1/255,X)
-  data = load()
   X_train = (flat(x_train))
   X_val = (flat(x_val))
   Y_train = np.eye(10)[y_train]
@@ -45,6 +46,7 @@ def mnist_data():
       'x_test' : min_max_normalize(flat(x_test)),
       'y_test' : y_test,
   }
+
 def load():
   (x_train,y_train),(x_test,y_test) = fashion_mnist.load_data()
   size = len(x_train)
@@ -115,3 +117,4 @@ def dataset():
 # Y_val = np.eye(10)[data['y_val']]
 # print(X_train.shape)
 # print(Y_train)
+mnist_data()
