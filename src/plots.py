@@ -25,17 +25,16 @@ num_classes = Y_train.shape[1]
 
 wandb.login(key="866040d7d81f67025d43e7d50ecd83d54b6cf977", relogin=False)
 config_defaults = {
-        'epochs' : 10,
+        'epochs' : 15,
         'batch_size' : 64,
-        'weight_decay' : 0.0005,
+        'weight_decay' : 0,
         'learning_rate' : 1e-4,
         'activation' : 'tanh',
         'optimizer' : 'adam',
         'num_hidden_layers' : 3,
-        'hidden_layer_size' : 128,
+        'hidden_layer_size' : 256,
         'momentum' : 0.9,
-        'weight_init' : 'Xavier',
-        'loss_fn':'cross_entropy'
+        'weight_init' : 'Xavier'
     }
 def sassy_conf(y_true, y_pred, labels, ymap=None, figsize=(10,10)):
     """
@@ -182,18 +181,55 @@ def lossdiff():
     network1.fit(config.epochs, X_train, X_val , Y_train, Y_val, config.batch_size ,config.loss_fn,config.learning_rate,
      config.momentum ,config.weight_decay ,config.optimizer)
 def Q8():
-    sweep_config = {
-        'method': 'random', #grid, random
+    sweep_config2 = {
+        'method': 'grid', #grid, random
         'metric': {
         'name': 'val_accuracy',
         'goal': 'maximize'   
         },
         'parameters': {
-            'loss_fn': {
+            'epochs': {
+                # 'values': [5, 10, 15]
+                'values': [10, 15]
+            },
+            'num_hidden_layers': {
+                # 'values': [3,4,5]
+                'values': [3]
+            },
+            'hidden_layer_size': {  
+                # 'values': [32,64,128]
+                'values': [128, 256]
+            },
+            'weight_decay': {
+                # 'values': [0, 0.0005, 0.5]
+                'values': [0, 0.5]
+            },
+            'learning_rate': {
+                # 'values': [1e-3, 1e-4]
+                'values': [1e-4]
+            },
+            'optimizer': {
+                # 'values': ['sgd', 'momentum','nesterov', 'rmsprop','adam','nadam']
+                'values': ['nesterov', 'rmsprop','adam']
+            },
+            'batch_size':{
+                # 'values': [16,32,64]
+                'values': [64]
+            },
+            'weight_init':{
+                # 'values':['random','Xavier']
+                'values':['Xavier']
+            },
+            'activation': {
                 # 'values': ['tanh', 'sigmoid', 'relu']
-                'values': ['cross_entropy','square_error']
+                'values': ['tanh']
+            },
+            'loss_fn':
+            {
+                'values' :['cross_entropy','square_error']
             }
         }
     }
-    sweep_id = wandb.sweep(sweep_config, entity="mooizz",project="feedforwardfashion")
+    sweep_id = wandb.sweep(sweep_config2, entity="mooizz",project="feedforwardfashion")
     wandb.agent(sweep_id, lossdiff)
+Q8()
