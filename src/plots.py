@@ -259,17 +259,19 @@ def numbers():
     number_data = dataset.mnist_data()
     
     network = nn.NeuralNet(config.num_hidden_layers,sizes,activations,config.weight_init)
-    network.fit(config.epochs, number_data['x_train'], number_data['x_val'] , number_data['y_train'] ,number_data['y_val'] , config.batch_size ,'cross_entropy',config.learning_rate,
-     config.momentum ,config.weight_decay ,config.optimizer)
-    print('264, ', network.forward(number_data['x_test']).shape)
-    predictions = np.argmax(network.forward(number_data['x_test']), axis=1)
-    Yt = []
-    pred = []
-    number_test = number_data['y_test']
+    # network.fit(config.epochs, number_data['x_train'], number_data['x_val'] , number_data['y_train'] ,number_data['y_val'] , config.batch_size ,'cross_entropy',config.learning_rate,
+    #  config.momentum ,config.weight_decay ,config.optimizer)
+    fpred = np.asarray(network.forward(number_data['x_test']) )
     
-    wandb.log({"test_accuracy" : network.accuracy(pred,Yt)})
+    number_test = np.eye(10)[number_data['y_test']]
+    
+    wandb.log({"test_accuracy" : network.accuracy(fpred,number_test)})
     # Q7_CF(Y_test, predictions)
     # sassy_conf(Yt, pred, labels)
+    # Yt = []
+    # pred = []
+    # for i in range(fpred.shape[0]):
+    #     Yt.append(fpred)
     # wandb.log({"conf_mat" : wandb.plot.confusion_matrix(probs=None,
     #                     y_true=Y_test, preds=predictions,
     #                     class_names=labels)})

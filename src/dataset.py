@@ -15,8 +15,6 @@ def normalize(A):
 
 def mnist_data():
   (x_train,y_train),(x_test,y_test) = mnist.load_data()
-  print(y_test.shape)
-  pass
   size = len(x_train)
   # print(size)
   train_size = math.floor( (0.9)*size)
